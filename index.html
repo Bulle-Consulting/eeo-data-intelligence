@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -128,7 +128,21 @@
     .grant-meta-item span { font-size:13px; font-weight:600; color:#fff; }
     .grant-meta-item span.gold { color:var(--ccc-gold); }
     .grant-meta-divider { width:1px; height:32px; background:rgba(255,255,255,0.15); }
-    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; margin-bottom:24px; }
+    /* Overview KPIs — locked 5-up layout for the five tiles so they sit evenly in one row on desktop */
+    .kpi-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+    /* LIFT chip floats above the "4" number on Tier 2 Districts, like a trademark on a logo.
+       Always visible — no hover or interaction needed. */
+    .kpi-value-wrap { position:relative; display:inline-block; }
+    .lift-mark-value {
+      position:absolute;
+      top:-8px;
+      right:-22px;
+      padding:2px 6px;
+      font-size:9px;
+      line-height:1.1;
+      letter-spacing:0.06em;
+      box-shadow:0 1px 3px rgba(0,0,0,0.18);
+    }
     .kpi-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 20px; box-shadow:var(--shadow-sm); transition:box-shadow var(--transition),transform var(--transition); }
     .kpi-card:hover { box-shadow:var(--shadow-md); transform:translateY(-1px); }
     .kpi-label { font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
@@ -223,6 +237,9 @@
     .outcome-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-sm); }
     .outcome-card-header { background:var(--ccc-dark-blue); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .outcome-card-name { font-size:13px; font-weight:700; color:#fff; }
+    /* Tier badge sitting on a dark header — flip to white on translucent so it stays legible */
+    .outcome-card-header .tier-badge { background:rgba(255,255,255,0.18); color:#fff; }
+    .outcome-card-header .lift-mark { background:var(--ccc-gold); color:var(--ccc-dark-blue); }
     .outcome-list { list-style:none; padding:12px 16px; }
     .outcome-list li { font-size:13px; color:var(--text-secondary); padding:6px 0; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:8px; line-height:1.4; }
     .outcome-list li:last-child { border-bottom:none; }
@@ -312,12 +329,17 @@
       .topbar { padding:0 16px; }
       .content { padding:16px; }
     }
+    @media (max-width:1180px) {
+      .kpi-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    }
+    @media (max-width:1024px) {
+      .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
     @media (max-width:768px) {
       .chart-grid { grid-template-columns:1fr; }
       .outcomes-grid { grid-template-columns:1fr; }
       .mobile-nav { display:flex; }
       .main { padding-bottom:var(--mobile-nav-h); height:auto; }
-      .kpi-grid { grid-template-columns:repeat(2,1fr); }
       .district-grid,.contacts-grid,.budget-grid { grid-template-columns:1fr; }
       .grant-meta { gap:14px; }
       .grant-meta-divider { display:none; }
@@ -370,7 +392,7 @@
       <div class="logo-sub">2026–2028 IBP Grant Initiative</div>
     </div>
 
-    <div class="sidebar-section-label">Dashboard</div>
+    <div class="sidebar-section-label" data-i18n="sb_dashboard">Dashboard</div>
     <button class="nav-item active" onclick="showSection('overview',this)" data-i18n="nav_overview">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       Overview
@@ -384,7 +406,7 @@
       Districts
     </button>
 
-    <div class="sidebar-section-label">Performance</div>
+    <div class="sidebar-section-label" data-i18n="sb_performance">Performance</div>
     <button class="nav-item" onclick="showSection('outcomes',this)" data-i18n="nav_outcomes">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       Outcomes
@@ -394,7 +416,7 @@
       Budget Breakdown
     </button>
 
-    <div class="sidebar-section-label">Program</div>
+    <div class="sidebar-section-label" data-i18n="sb_program">Program</div>
     <button class="nav-item" onclick="showSection('timeline',this)" data-i18n="nav_timeline">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Timeline
@@ -404,14 +426,14 @@
       Contacts
     </button>
 
-    <div class="sidebar-section-label">Spend Monitor</div>
+    <div class="sidebar-section-label" data-i18n="sb_spend_monitor">Spend Monitor</div>
     <button class="nav-item" onclick="showSection('spenddown',this)" data-i18n="nav_spenddown">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Spend-Down Monitor
     </button>
 
     <div class="sidebar-footer">
-      <div class="sidebar-footer-label">Grant Monitor</div>
+      <div class="sidebar-footer-label" data-i18n="meta_monitor">Grant Monitor</div>
       <div class="sidebar-footer-val">Bulle Consulting</div>
       <div class="sidebar-footer-val" style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">admin@bulleconsulting.com</div>
     </div>
@@ -436,12 +458,13 @@
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="translate-dropdown" id="transDropdown">
-            <div class="translate-dropdown-header">Select Language</div>
+            <div class="translate-dropdown-header" data-i18n="select_language">Select Language</div>
             <button class="lang-option active" onclick="setLang('en')"><span class="lang-flag">🇺🇸</span><span class="lang-name">English</span><span class="lang-native">English</span></button>
             <button class="lang-option" onclick="setLang('es')"><span class="lang-flag">🇲🇽</span><span class="lang-name">Spanish</span><span class="lang-native">Español</span></button>
             <button class="lang-option" onclick="setLang('vi')"><span class="lang-flag">🇻🇳</span><span class="lang-name">Vietnamese</span><span class="lang-native">Tiếng Việt</span></button>
             <button class="lang-option" onclick="setLang('ar')"><span class="lang-flag">🇸🇦</span><span class="lang-name">Arabic</span><span class="lang-native">العربية</span></button>
             <button class="lang-option" onclick="setLang('tl')"><span class="lang-flag">🇵🇭</span><span class="lang-name">Tagalog</span><span class="lang-native">Tagalog</span></button>
+            <button class="lang-option" onclick="setLang('zh')"><span class="lang-flag">🇹🇼</span><span class="lang-name">Chinese (Traditional)</span><span class="lang-native">繁體中文</span></button>
           </div>
         </div>
         <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">
@@ -471,15 +494,14 @@
           <div class="grant-meta-divider"></div>
           <div class="grant-meta-item"><label data-i18n="meta_duration">Funding Cycle</label><span>Jan 2026 – Jun 2028</span></div>
           <div class="grant-meta-divider"></div>
-          <div class="grant-meta-item"><label data-i18n="meta_status">Status</label><span class="gold">● Active</span></div>
+          <div class="grant-meta-item"><label data-i18n="meta_status">Status</label><span class="gold">● <span data-i18n="status_active">Active</span></span></div>
         </div>
 
         <div class="kpi-grid">
           <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label" data-i18n="kpi_total_funding">Total Grant Funding</div><div class="kpi-value blue">$1,399,997</div><div class="kpi-sub" data-i18n="kpi_across">Across 11 districts</div></div>
           <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label" data-i18n="kpi_total_districts">Total Districts</div><div class="kpi-value medium-blue">11</div><div class="kpi-sub" data-i18n="kpi_all_submitted">All submitted</div></div>
           <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label" data-i18n="kpi_tier1">Tier 1 Districts</div><div class="kpi-value blue">7</div><div class="kpi-sub" data-i18n="kpi_tier1_sub">$150K each (avg)</div></div>
-          <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label" data-i18n="kpi_tier2">Tier 2 Districts</div><div class="kpi-value medium-blue">4</div><div class="kpi-sub" data-i18n="kpi_tier2_sub">$100K each (LIFT)</div></div>
-          <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label" data-i18n="kpi_lift">LIFT Alliance</div><div class="kpi-value gold">4</div><div class="kpi-sub">AVC · Citrus · Peralta · WVM</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label" data-i18n="kpi_tier2">Tier 2 Districts</div><div class="kpi-value-wrap"><span class="lift-mark lift-mark-value" title="LIFT Alliance">LIFT</span><div class="kpi-value medium-blue">4</div></div><div class="kpi-sub" data-i18n="kpi_tier2_sub">$100K each</div></div>
           <div class="kpi-card"><div class="kpi-accent-bar grey"></div><div class="kpi-label" data-i18n="kpi_focus">Focus Areas</div><div class="kpi-value grey">8</div><div class="kpi-sub" data-i18n="kpi_focus_sub">Mentorship · Training · Hiring · Tech</div></div>
         </div>
 
@@ -503,7 +525,7 @@
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title" data-i18n="table_district_summary">District Summary</div><div class="chart-label">All 11 Districts · $1,399,997 Total</div></div>
+          <div class="card-header"><div class="card-title" data-i18n="table_district_summary">District Summary</div><div class="chart-label" data-i18n="all_districts_total">All 11 Districts · $1,399,997 Total</div></div>
           <div class="data-table-wrap">
             <table class="data-table">
               <thead><tr><th data-i18n="th_district">District</th><th data-i18n="th_tier">Tier</th><th data-i18n="th_funding">Funding</th><th data-i18n="th_y1">Year 1</th><th data-i18n="th_y2">Year 2</th><th data-i18n="th_focus">Primary Focus</th></tr></thead>
@@ -553,10 +575,10 @@
         <div class="page-header"><h2 data-i18n="districts_title">District Profiles</h2><p data-i18n="districts_sub">All 11 participating community college districts</p></div>
         <div class="filter-row">
           <span class="filter-label" data-i18n="filter_by">Filter by:</span>
-          <button class="filter-btn active" onclick="filterDistricts('all',this)" data-i18n="filter_all">All Districts</button>
-          <button class="filter-btn" onclick="filterDistricts('tier1',this)" data-i18n="filter_tier1">Tier 1</button>
-          <button class="filter-btn" onclick="filterDistricts('tier2',this)" data-i18n="filter_tier2">Tier 2</button>
-          <button class="filter-btn" onclick="filterDistricts('lift',this)" data-i18n="filter_lift">LIFT Alliance</button>
+          <button class="filter-btn active" data-filter="all" onclick="filterDistricts('all',this)" data-i18n="filter_all">All Districts</button>
+          <button class="filter-btn" data-filter="tier1" onclick="filterDistricts('tier1',this)" data-i18n="filter_tier1">Tier 1</button>
+          <button class="filter-btn" data-filter="tier2" onclick="filterDistricts('tier2',this)" data-i18n="filter_tier2">Tier 2</button>
+          <button class="filter-btn" data-filter="lift" onclick="filterDistricts('lift',this)" data-i18n="filter_lift">LIFT Alliance</button>
         </div>
         <div class="district-grid" id="district-grid"></div>
       </div>
@@ -617,15 +639,15 @@
 
       <!-- SPEND-DOWN MONITOR -->
       <div id="section-spenddown" class="section">
-        <div class="page-header"><h2>Spend-Down Monitor</h2><p>Track grant expenditures across the 2-year funding cycle and flag districts at risk of underspending</p></div>
+        <div class="page-header"><h2 data-i18n="spend_title">Spend-Down Monitor</h2><p data-i18n="spend_sub">Track grant expenditures across the 2-year funding cycle and flag districts at risk of underspending</p></div>
         <div class="alloc-kpi-row" id="spend-kpi-row"></div>
         <div class="card mb-24" id="underspend-alert-card">
           <div class="card-header" style="background:rgba(229,62,62,0.08);border-bottom:2px solid rgba(229,62,62,0.25);">
-            <div class="card-title" style="color:#c53030;display:flex;align-items:center;gap:8px;">&#9888; Underspend Risk Alerts</div>
-            <span id="underspend-count" class="risk-badge high">Calculating...</span>
+            <div class="card-title" style="color:#c53030;display:flex;align-items:center;gap:8px;"><span data-i18n="underspend_title">⚠ Underspend Risk Alerts</span></div>
+            <span id="underspend-count" class="risk-badge high" data-i18n="calculating">Calculating...</span>
           </div>
           <div class="card-body">
-            <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;">Districts get flagged when their <strong style="color:var(--text-secondary);">Spend Pace</strong> is set to <strong style="color:#E0B500;">Slow</strong>, <strong style="color:#c53030;">Fast</strong>, or <strong style="color:#D18A00;">Underfunded</strong>. Set the pace to <strong style="color:#1a7a3c;">Moderate</strong> in the table below to clear the flag.</p>
+            <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;" data-i18n="underspend_desc">Districts get flagged when their Spend Pace is set to Slow, Fast, or Underfunded. Set the pace to Moderate in the table below to clear the flag.</p>
             <div id="underspend-chart-wrap" style="position:relative;height:240px;margin-bottom:14px;display:none;">
               <canvas id="underspendChart"></canvas>
             </div>
@@ -633,10 +655,10 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">District Spend-Down Detail</div><div class="chart-label">Allocations vs. Year-by-Year Spend · 2-Year Cycle</div></div>
+          <div class="card-header"><div class="card-title" data-i18n="spend_table_title">District Spend-Down Detail</div><div class="chart-label" data-i18n="spend_table_sub">Allocations vs. Year-by-Year Spend · 2-Year Cycle</div></div>
           <div class="data-table-wrap">
             <table class="data-table" id="spend-table">
-              <thead><tr><th>District</th><th>Total Grant</th><th>Year 1 Budget</th><th>Year 2 Budget</th><th>Disbursed % of Total</th><th>Spend Pace</th><th>Status</th></tr></thead>
+              <thead><tr><th data-i18n="th_district">District</th><th data-i18n="th_total_grant">Total Grant</th><th data-i18n="th_y1_budget">Year 1 Budget</th><th data-i18n="th_y2_budget">Year 2 Budget</th><th data-i18n="th_disbursed_pct">Disbursed % of Total</th><th data-i18n="th_spend_pace">Spend Pace</th><th data-i18n="th_status">Status</th></tr></thead>
               <tbody id="spend-table-body"></tbody>
             </table>
           </div>
@@ -918,12 +940,12 @@ const translations = {
     nav_overview:'Overview', nav_funds:'Fund Allocations', nav_districts:'Districts',
     nav_outcomes:'Outcomes', nav_budget:'Budget Breakdown', nav_timeline:'Timeline', nav_contacts:'Contacts', nav_spenddown:'Spend-Down Monitor',
     topbar_title:'EEO Data Intelligence',
-    overview_title:'Program Overview', overview_sub:'Statewide summary of the EEO Innovative Best Practices grant across 11 community college districts',
+    overview_title:'Program Overview', overview_sub:'A statewide overview of the Equal Employment Opportunity (EEO) Innovative Best Practices grant initiative, encompassing 11 California community college districts.',
     meta_monitor:'Grant Monitor', meta_grantid:'Grant ID', meta_start:'Start', meta_duration:'Funding Cycle', meta_status:'Status',
     kpi_total_funding:'Total Grant Funding', kpi_across:'Across 11 districts',
     kpi_total_districts:'Total Districts', kpi_all_submitted:'All submitted',
     kpi_tier1:'Tier 1 Districts', kpi_tier1_sub:'$150K each (avg)',
-    kpi_tier2:'Tier 2 Districts', kpi_tier2_sub:'$100K each (LIFT)',
+    kpi_tier2:'Tier 2 Districts', kpi_tier2_sub:'$100K each',
     kpi_lift:'LIFT Alliance', kpi_focus:'Focus Areas', kpi_focus_sub:'Mentorship · Training · Hiring · Tech',
     lift_title:'LIFT Alliance — Leadership Institute for Tomorrow',
     lift_desc:'Four of the 11 districts — Antelope Valley CCD (Region 6), Citrus CCD (Region 8), Peralta CCD (Region 3), and West Valley-Mission CCD (Region 4) — are members of an unprecedented 10-college-10-region statewide alliance, implementing a shared Mentor & Match Professional Platform across California Community Colleges.',
@@ -946,17 +968,67 @@ const translations = {
     timeline_title:'Implementation Timeline', timeline_sub:'2-year funding cycle · Jan 1, 2026 → Jun 30, 2028',
     chart_yearly:'Year-by-Year Spend Profile', chart_all_districts:'All Districts',
     tl_y1:'Year 1 (Jan 2026 – Jun 2027)', tl_y2:'Year 2 (Jul 2027 – Jun 2028)',
-    contacts_title:'District Contacts', contacts_sub:'Project leads, alternates, and fiscal reporters'
+    contacts_title:'District Contacts', contacts_sub:'Project leads, alternates, and fiscal reporters',
+    spend_title:'Spend-Down Monitor',
+    spend_sub:'Track grant expenditures across the 2-year funding cycle and flag districts at risk of underspending',
+    underspend_title:'⚠ Underspend Risk Alerts',
+    calculating:'Calculating...',
+    underspend_desc:'Districts get flagged when their Spend Pace is set to Slow, Fast, or Underfunded. Set the pace to Moderate in the table below to clear the flag.',
+    spend_table_title:'District Spend-Down Detail',
+    spend_table_sub:'Allocations vs. Year-by-Year Spend · 2-Year Cycle',
+    th_total_grant:'Total Grant',
+    th_y1_budget:'Year 1 Budget',
+    th_y2_budget:'Year 2 Budget',
+    th_disbursed_pct:'Disbursed % of Total',
+    th_spend_pace:'Spend Pace',
+    th_status:'Status',
+    kpi_total_grant_label:'Total Grant',
+    kpi_y1_budget_label:'Year 1 Budget',
+    kpi_y2_budget_label:'Year 2 Budget',
+    kpi_all_11_districts:'All 11 districts',
+    kpi_y1_window:'of grant · Jan 2026 – Jun 2027',
+    kpi_y2_window:'of grant · Jul 2027 – Jun 2028',
+    pace_slow:'Slow',
+    pace_moderate:'Moderate',
+    pace_fast:'Fast',
+    pace_underfunded:'Underfunded',
+    status_on:'On Track',
+    status_off:'Off Track',
+    th_direct_funding:'Total Funding',
+    th_pct_total:'% of Total',
+    th_cccco_disbursed:'CCCCO Disbursed',
+    th_cccco_disbursed_rate:'CCCCO Disbursed Rate',
+    all_districts_total:'All 11 Districts · $1,399,997 Total',
+    role_project_lead:'Project Lead',
+    role_alt_project_lead:'Alternate Project Lead',
+    role_fiscal_reporter:'Fiscal Reporter',
+    role_plan_approver:'Plan Approver',
+    all_clear:'✓ All districts are on track — no underspend risks detected.',
+    flagged_one:'District Flagged',
+    flagged_many:'Districts Flagged',
+    tl_total:'Total',
+    tl_pace_label:'Pace:',
+    kpi_y1_total_label:'Year 1 Total',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'All 11 districts',
+    sb_dashboard:'Dashboard',
+    sb_performance:'Performance',
+    sb_program:'Program',
+    sb_spend_monitor:'Spend Monitor',
+    select_language:'Select Language',
+    status_active:'Active',
+    y1_window_short:'Jan 2026 – Jun 2027',
+    y2_window_short:'Jul 2027 – Jun 2028'
   },
   es: {
     nav_overview:'Resumen', nav_funds:'Asignaciones', nav_districts:'Distritos', nav_outcomes:'Resultados', nav_budget:'Presupuesto', nav_timeline:'Cronograma', nav_contacts:'Contactos', nav_spenddown:'Monitor de Gastos',
     topbar_title:'Inteligencia de Datos EEO',
-    overview_title:'Resumen del Programa', overview_sub:'Resumen estatal de la subvención EEO de Mejores Prácticas Innovadoras en 11 distritos de colegios comunitarios',
+    overview_title:'Resumen del Programa', overview_sub:'Una visión estatal de la iniciativa de Subvención de Mejores Prácticas Innovadoras de Igualdad de Oportunidades de Empleo (EEO), que abarca 11 distritos de colegios comunitarios de California.',
     meta_monitor:'Monitor de Subvención', meta_grantid:'ID de Subvención', meta_start:'Inicio', meta_duration:'Ciclo de Financiamiento', meta_status:'Estado',
     kpi_total_funding:'Financiamiento Total', kpi_across:'En 11 distritos',
     kpi_total_districts:'Total Distritos', kpi_all_submitted:'Todos enviados',
     kpi_tier1:'Distritos Nivel 1', kpi_tier1_sub:'$150K cada uno (promedio)',
-    kpi_tier2:'Distritos Nivel 2', kpi_tier2_sub:'$100K cada uno (LIFT)',
+    kpi_tier2:'Distritos Nivel 2', kpi_tier2_sub:'$100K cada uno',
     kpi_lift:'Alianza LIFT', kpi_focus:'Áreas de Enfoque', kpi_focus_sub:'Mentoría · Capacitación · Contratación · Tecnología',
     lift_title:'Alianza LIFT — Instituto de Liderazgo para el Mañana',
     lift_desc:'Cuatro de los 11 distritos son miembros de una alianza estatal sin precedentes de 10 colegios y 10 regiones.',
@@ -979,17 +1051,67 @@ const translations = {
     timeline_title:'Cronograma de Implementación', timeline_sub:'Ciclo de financiamiento de 2 años · 1 Ene 2026 → 30 Jun 2028',
     chart_yearly:'Perfil de Gasto Año por Año', chart_all_districts:'Todos los Distritos',
     tl_y1:'Año 1 (Ene 2026 – Jun 2027)', tl_y2:'Año 2 (Jul 2027 – Jun 2028)',
-    contacts_title:'Contactos de Distrito', contacts_sub:'Líderes de proyecto, alternos y reporteros fiscales'
+    contacts_title:'Contactos de Distrito', contacts_sub:'Líderes de proyecto, alternos y reporteros fiscales',
+    spend_title:'Monitor de Gastos',
+    spend_sub:'Monitorear gastos de la subvención durante el ciclo de financiamiento de 2 años y marcar distritos con riesgo de subgasto',
+    underspend_title:'⚠ Alertas de Riesgo de Subgasto',
+    calculating:'Calculando...',
+    underspend_desc:'Los distritos se marcan cuando su ritmo de gasto es Lento, Rápido o Subfinanciado. Establezca el ritmo en Moderado en la tabla para quitar la marca.',
+    spend_table_title:'Detalle de Gastos por Distrito',
+    spend_table_sub:'Asignaciones vs. Gasto Anual · Ciclo de 2 Años',
+    th_total_grant:'Subvención Total',
+    th_y1_budget:'Presupuesto Año 1',
+    th_y2_budget:'Presupuesto Año 2',
+    th_disbursed_pct:'Desembolsado % del Total',
+    th_spend_pace:'Ritmo de Gasto',
+    th_status:'Estado',
+    kpi_total_grant_label:'Subvención Total',
+    kpi_y1_budget_label:'Presupuesto Año 1',
+    kpi_y2_budget_label:'Presupuesto Año 2',
+    kpi_all_11_districts:'Los 11 distritos',
+    kpi_y1_window:'del total · Ene 2026 – Jun 2027',
+    kpi_y2_window:'del total · Jul 2027 – Jun 2028',
+    pace_slow:'Lento',
+    pace_moderate:'Moderado',
+    pace_fast:'Rápido',
+    pace_underfunded:'Subfinanciado',
+    status_on:'En Camino',
+    status_off:'Desviado',
+    th_direct_funding:'Financiamiento Total',
+    th_pct_total:'% del Total',
+    th_cccco_disbursed:'CCCCO Desembolsado',
+    th_cccco_disbursed_rate:'Tasa de Desembolso CCCCO',
+    all_districts_total:'Los 11 Distritos · $1,399,997 Total',
+    role_project_lead:'Líder de Proyecto',
+    role_alt_project_lead:'Líder Alterno de Proyecto',
+    role_fiscal_reporter:'Reportero Fiscal',
+    role_plan_approver:'Aprobador del Plan',
+    all_clear:'✓ Todos los distritos están en camino — sin riesgos de subgasto.',
+    flagged_one:'Distrito Marcado',
+    flagged_many:'Distritos Marcados',
+    tl_total:'Total',
+    tl_pace_label:'Ritmo:',
+    kpi_y1_total_label:'Total Año 1',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'Los 11 distritos',
+    sb_dashboard:'Panel',
+    sb_performance:'Rendimiento',
+    sb_program:'Programa',
+    sb_spend_monitor:'Monitor de Gastos',
+    select_language:'Seleccionar Idioma',
+    status_active:'Activo',
+    y1_window_short:'Ene 2026 – Jun 2027',
+    y2_window_short:'Jul 2027 – Jun 2028'
   },
   vi: {
     nav_overview:'Tổng quan', nav_funds:'Phân bổ vốn', nav_districts:'Quận', nav_outcomes:'Kết quả', nav_budget:'Ngân sách', nav_timeline:'Lịch trình', nav_contacts:'Liên lạc', nav_spenddown:'Theo dõi Chi tiêu',
     topbar_title:'Thông tin EEO',
-    overview_title:'Tổng quan Chương trình', overview_sub:'Tóm tắt toàn tiểu bang về tài trợ EEO IBP tại 11 quận trường cao đẳng cộng đồng',
+    overview_title:'Tổng quan Chương trình', overview_sub:'Tổng quan toàn tiểu bang về sáng kiến Tài trợ Thực hành Sáng tạo Tốt nhất về Cơ hội Bình đẳng trong Việc làm (EEO), bao gồm 11 quận trường cao đẳng cộng đồng California.',
     meta_monitor:'Người giám sát', meta_grantid:'Mã tài trợ', meta_start:'Bắt đầu', meta_duration:'Chu kỳ tài trợ', meta_status:'Trạng thái',
     kpi_total_funding:'Tổng tài trợ', kpi_across:'Trên 11 quận',
     kpi_total_districts:'Tổng số quận', kpi_all_submitted:'Tất cả đã nộp',
     kpi_tier1:'Quận Cấp 1', kpi_tier1_sub:'$150K mỗi quận',
-    kpi_tier2:'Quận Cấp 2', kpi_tier2_sub:'$100K mỗi quận (LIFT)',
+    kpi_tier2:'Quận Cấp 2', kpi_tier2_sub:'$100K mỗi quận',
     kpi_lift:'Liên minh LIFT', kpi_focus:'Lĩnh vực trọng tâm', kpi_focus_sub:'Cố vấn · Đào tạo · Tuyển dụng · Công nghệ',
     lift_title:'Liên minh LIFT — Viện Lãnh đạo cho Tương lai',
     lift_desc:'Bốn trong số 11 quận là thành viên của liên minh 10 trường cao đẳng-10 khu vực toàn tiểu bang.',
@@ -1012,17 +1134,67 @@ const translations = {
     timeline_title:'Lịch trình thực hiện', timeline_sub:'Chu kỳ tài trợ 2 năm · 1/1/2026 → 30/6/2028',
     chart_yearly:'Hồ sơ chi tiêu hàng năm', chart_all_districts:'Tất cả quận',
     tl_y1:'Năm 1 (Th1 2026 – Th6 2027)', tl_y2:'Năm 2 (Th7 2027 – Th6 2028)',
-    contacts_title:'Liên hệ quận', contacts_sub:'Trưởng dự án, người thay thế và báo cáo tài chính'
+    contacts_title:'Liên hệ quận', contacts_sub:'Trưởng dự án, người thay thế và báo cáo tài chính',
+    spend_title:'Theo dõi Chi tiêu',
+    spend_sub:'Theo dõi chi tiêu trong chu kỳ tài trợ 2 năm và đánh dấu các quận có nguy cơ chi tiêu thiếu',
+    underspend_title:'⚠ Cảnh báo Rủi ro Chi tiêu Thiếu',
+    calculating:'Đang tính...',
+    underspend_desc:'Quận được đánh dấu khi tốc độ chi tiêu là Chậm, Nhanh hoặc Thiếu vốn. Đặt thành Vừa phải để gỡ cờ.',
+    spend_table_title:'Chi tiết Chi tiêu theo Quận',
+    spend_table_sub:'Phân bổ vs. Chi tiêu Hàng năm · Chu kỳ 2 Năm',
+    th_total_grant:'Tổng Tài trợ',
+    th_y1_budget:'Ngân sách Năm 1',
+    th_y2_budget:'Ngân sách Năm 2',
+    th_disbursed_pct:'Đã giải ngân % Tổng',
+    th_spend_pace:'Tốc độ Chi tiêu',
+    th_status:'Trạng thái',
+    kpi_total_grant_label:'Tổng Tài trợ',
+    kpi_y1_budget_label:'Ngân sách Năm 1',
+    kpi_y2_budget_label:'Ngân sách Năm 2',
+    kpi_all_11_districts:'Tất cả 11 quận',
+    kpi_y1_window:'của tổng · Th1 2026 – Th6 2027',
+    kpi_y2_window:'của tổng · Th7 2027 – Th6 2028',
+    pace_slow:'Chậm',
+    pace_moderate:'Vừa phải',
+    pace_fast:'Nhanh',
+    pace_underfunded:'Thiếu vốn',
+    status_on:'Đúng Tiến độ',
+    status_off:'Chệch Hướng',
+    th_direct_funding:'Tổng Tài trợ',
+    th_pct_total:'% Tổng',
+    th_cccco_disbursed:'CCCCO Đã Giải ngân',
+    th_cccco_disbursed_rate:'Tỷ lệ Giải ngân CCCCO',
+    all_districts_total:'Tất cả 11 Quận · $1,399,997 Tổng',
+    role_project_lead:'Trưởng Dự án',
+    role_alt_project_lead:'Trưởng Dự án Phụ',
+    role_fiscal_reporter:'Báo cáo Tài chính',
+    role_plan_approver:'Người Phê duyệt Kế hoạch',
+    all_clear:'✓ Tất cả quận đúng tiến độ — không có rủi ro chi tiêu thiếu.',
+    flagged_one:'Quận được Đánh dấu',
+    flagged_many:'Quận được Đánh dấu',
+    tl_total:'Tổng',
+    tl_pace_label:'Tốc độ:',
+    kpi_y1_total_label:'Tổng Năm 1',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'Tất cả 11 quận',
+    sb_dashboard:'Bảng điều khiển',
+    sb_performance:'Hiệu suất',
+    sb_program:'Chương trình',
+    sb_spend_monitor:'Giám sát Chi tiêu',
+    select_language:'Chọn Ngôn ngữ',
+    status_active:'Đang hoạt động',
+    y1_window_short:'Th1 2026 – Th6 2027',
+    y2_window_short:'Th7 2027 – Th6 2028'
   },
   ar: {
     nav_overview:'نظرة عامة', nav_funds:'التخصيصات', nav_districts:'المقاطعات', nav_outcomes:'النتائج', nav_budget:'الميزانية', nav_timeline:'الجدول الزمني', nav_contacts:'جهات الاتصال', nav_spenddown:'مراقب الإنفاق',
     topbar_title:'بيانات EEO الذكية',
-    overview_title:'نظرة عامة على البرنامج', overview_sub:'ملخص على مستوى الولاية لمنحة EEO لأفضل الممارسات المبتكرة عبر 11 مقاطعة',
+    overview_title:'نظرة عامة على البرنامج', overview_sub:'نظرة عامة على مستوى الولاية لمبادرة منحة الممارسات المبتكرة الأفضل لتكافؤ فرص العمل (EEO)، تشمل 11 مقاطعة كليات مجتمعية في كاليفورنيا.',
     meta_monitor:'مراقب المنحة', meta_grantid:'معرّف المنحة', meta_start:'البداية', meta_duration:'دورة التمويل', meta_status:'الحالة',
     kpi_total_funding:'إجمالي التمويل', kpi_across:'عبر 11 مقاطعة',
     kpi_total_districts:'إجمالي المقاطعات', kpi_all_submitted:'جميعها مُقدَّمة',
     kpi_tier1:'مقاطعات الفئة 1', kpi_tier1_sub:'$150K لكل منها',
-    kpi_tier2:'مقاطعات الفئة 2', kpi_tier2_sub:'$100K لكل منها (LIFT)',
+    kpi_tier2:'مقاطعات الفئة 2', kpi_tier2_sub:'$100K لكل منها',
     kpi_lift:'تحالف LIFT', kpi_focus:'مجالات التركيز', kpi_focus_sub:'الإرشاد · التدريب · التوظيف · التكنولوجيا',
     lift_title:'تحالف LIFT — معهد القيادة من أجل الغد',
     lift_desc:'أربع من بين 11 مقاطعة أعضاء في تحالف ولائي يضم 10 كليات و10 مناطق.',
@@ -1045,17 +1217,67 @@ const translations = {
     timeline_title:'الجدول الزمني للتنفيذ', timeline_sub:'دورة تمويل لمدة سنتين · 1 يناير 2026 → 30 يونيو 2028',
     chart_yearly:'ملف الإنفاق السنوي', chart_all_districts:'جميع المقاطعات',
     tl_y1:'السنة 1 (يناير 2026 – يونيو 2027)', tl_y2:'السنة 2 (يوليو 2027 – يونيو 2028)',
-    contacts_title:'جهات اتصال المقاطعة', contacts_sub:'قادة المشروع والبدلاء ومراسلو الميزانية'
+    contacts_title:'جهات اتصال المقاطعة', contacts_sub:'قادة المشروع والبدلاء ومراسلو الميزانية',
+    spend_title:'مراقب الإنفاق',
+    spend_sub:'تتبع نفقات المنحة خلال دورة التمويل لمدة سنتين وتمييز المقاطعات المعرضة لخطر الإنفاق الناقص',
+    underspend_title:'⚠ تنبيهات مخاطر الإنفاق الناقص',
+    calculating:'جارٍ الحساب...',
+    underspend_desc:'تُمَيَّز المقاطعات عندما تكون وتيرة الإنفاق بطيئة أو سريعة أو ناقصة التمويل. اضبط الوتيرة على معتدلة لإزالة العلامة.',
+    spend_table_title:'تفاصيل الإنفاق حسب المقاطعة',
+    spend_table_sub:'التخصيصات مقابل الإنفاق السنوي · دورة سنتين',
+    th_total_grant:'إجمالي المنحة',
+    th_y1_budget:'ميزانية السنة 1',
+    th_y2_budget:'ميزانية السنة 2',
+    th_disbursed_pct:'النسبة المصروفة من الإجمالي',
+    th_spend_pace:'وتيرة الإنفاق',
+    th_status:'الحالة',
+    kpi_total_grant_label:'إجمالي المنحة',
+    kpi_y1_budget_label:'ميزانية السنة 1',
+    kpi_y2_budget_label:'ميزانية السنة 2',
+    kpi_all_11_districts:'جميع المقاطعات الـ11',
+    kpi_y1_window:'من المنحة · يناير 2026 – يونيو 2027',
+    kpi_y2_window:'من المنحة · يوليو 2027 – يونيو 2028',
+    pace_slow:'بطيء',
+    pace_moderate:'معتدل',
+    pace_fast:'سريع',
+    pace_underfunded:'ناقص التمويل',
+    status_on:'على المسار',
+    status_off:'خارج المسار',
+    th_direct_funding:'إجمالي التمويل',
+    th_pct_total:'٪ من الإجمالي',
+    th_cccco_disbursed:'CCCCO المصروف',
+    th_cccco_disbursed_rate:'معدل صرف CCCCO',
+    all_districts_total:'المقاطعات الـ11 · $1,399,997 الإجمالي',
+    role_project_lead:'قائد المشروع',
+    role_alt_project_lead:'قائد بديل للمشروع',
+    role_fiscal_reporter:'مراسل الميزانية',
+    role_plan_approver:'معتمد الخطة',
+    all_clear:'✓ جميع المقاطعات على المسار — لا توجد مخاطر إنفاق ناقص.',
+    flagged_one:'مقاطعة مُمَيَّزة',
+    flagged_many:'مقاطعات مُمَيَّزة',
+    tl_total:'الإجمالي',
+    tl_pace_label:'الوتيرة:',
+    kpi_y1_total_label:'إجمالي السنة 1',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'جميع المقاطعات الـ11',
+    sb_dashboard:'لوحة التحكم',
+    sb_performance:'الأداء',
+    sb_program:'البرنامج',
+    sb_spend_monitor:'مراقب الإنفاق',
+    select_language:'اختر اللغة',
+    status_active:'نشط',
+    y1_window_short:'يناير 2026 – يونيو 2027',
+    y2_window_short:'يوليو 2027 – يونيو 2028'
   },
   tl: {
     nav_overview:'Pangkalahatang-tanaw', nav_funds:'Pagbibigay-pondo', nav_districts:'Mga Distrito', nav_outcomes:'Mga Resulta', nav_budget:'Badyet', nav_timeline:'Iskedyul', nav_contacts:'Mga Kontak', nav_spenddown:'Spend-Down Monitor',
     topbar_title:'EEO Data Intelligence',
-    overview_title:'Pangkalahatang-tanaw ng Programa', overview_sub:'Buod sa buong estado ng EEO IBP grant sa 11 distrito ng community college',
+    overview_title:'Pangkalahatang-tanaw ng Programa', overview_sub:'Isang pangkalahatang-tanaw sa buong estado ng inisyatiba ng Equal Employment Opportunity (EEO) Innovative Best Practices grant, na sumasaklaw sa 11 distrito ng California community college.',
     meta_monitor:'Grant Monitor', meta_grantid:'ID ng Grant', meta_start:'Simula', meta_duration:'Funding Cycle', meta_status:'Katayuan',
     kpi_total_funding:'Kabuuang Pondo', kpi_across:'Sa 11 distrito',
     kpi_total_districts:'Kabuuang Distrito', kpi_all_submitted:'Lahat naihain',
     kpi_tier1:'Mga Distrito ng Tier 1', kpi_tier1_sub:'$150K bawat isa',
-    kpi_tier2:'Mga Distrito ng Tier 2', kpi_tier2_sub:'$100K bawat isa (LIFT)',
+    kpi_tier2:'Mga Distrito ng Tier 2', kpi_tier2_sub:'$100K bawat isa',
     kpi_lift:'Alyansa ng LIFT', kpi_focus:'Mga Larangan ng Pokus', kpi_focus_sub:'Mentorship · Pagsasanay · Pagtatrabaho · Tech',
     lift_title:'Alyansa ng LIFT — Leadership Institute for Tomorrow',
     lift_desc:'Apat sa 11 distrito ang miyembro ng walang kapantay na 10-kolehiyo-10-rehiyon na alyansa.',
@@ -1078,16 +1300,150 @@ const translations = {
     timeline_title:'Iskedyul ng Pagpapatupad', timeline_sub:'2-taong funding cycle · Ene 1, 2026 → Hun 30, 2028',
     chart_yearly:'Profile ng Paggastos Taon-taon', chart_all_districts:'Lahat ng Distrito',
     tl_y1:'Taon 1 (Ene 2026 – Hun 2027)', tl_y2:'Taon 2 (Hul 2027 – Hun 2028)',
-    contacts_title:'Mga Kontak ng Distrito', contacts_sub:'Mga lider ng proyekto, kapalit, at fiscal reporter'
+    contacts_title:'Mga Kontak ng Distrito', contacts_sub:'Mga lider ng proyekto, kapalit, at fiscal reporter',
+    spend_title:'Spend-Down Monitor',
+    spend_sub:'Subaybayan ang gastos ng grant sa loob ng 2-taong funding cycle at i-flag ang mga distritong nasa panganib ng underspending',
+    underspend_title:'⚠ Underspend Risk Alerts',
+    calculating:'Kinakalkula...',
+    underspend_desc:'Naka-flag ang mga distrito kapag ang Spend Pace ay nakatakda sa Slow, Fast, o Underfunded. Itakda sa Moderate sa table upang alisin ang flag.',
+    spend_table_title:'Detalye ng Spend-Down ng Distrito',
+    spend_table_sub:'Mga Paglalaan vs. Taon-taong Gastos · 2-Year Cycle',
+    th_total_grant:'Kabuuang Grant',
+    th_y1_budget:'Badyet Taon 1',
+    th_y2_budget:'Badyet Taon 2',
+    th_disbursed_pct:'Naipamahagi % ng Kabuuan',
+    th_spend_pace:'Spend Pace',
+    th_status:'Katayuan',
+    kpi_total_grant_label:'Kabuuang Grant',
+    kpi_y1_budget_label:'Badyet Taon 1',
+    kpi_y2_budget_label:'Badyet Taon 2',
+    kpi_all_11_districts:'Lahat ng 11 distrito',
+    kpi_y1_window:'ng grant · Ene 2026 – Hun 2027',
+    kpi_y2_window:'ng grant · Hul 2027 – Hun 2028',
+    pace_slow:'Mabagal',
+    pace_moderate:'Katamtaman',
+    pace_fast:'Mabilis',
+    pace_underfunded:'Kulang sa Pondo',
+    status_on:'On Track',
+    status_off:'Off Track',
+    th_direct_funding:'Kabuuang Pondo',
+    th_pct_total:'% ng Kabuuan',
+    th_cccco_disbursed:'CCCCO Disbursed',
+    th_cccco_disbursed_rate:'CCCCO Disbursed Rate',
+    all_districts_total:'Lahat ng 11 Distrito · $1,399,997 Kabuuan',
+    role_project_lead:'Lider ng Proyekto',
+    role_alt_project_lead:'Kapalit na Lider ng Proyekto',
+    role_fiscal_reporter:'Fiscal Reporter',
+    role_plan_approver:'Plan Approver',
+    all_clear:'✓ Lahat ng distrito ay nasa landas — walang underspend risk na natuklasan.',
+    flagged_one:'Distritong Naka-flag',
+    flagged_many:'Mga Distritong Naka-flag',
+    tl_total:'Kabuuan',
+    tl_pace_label:'Pace:',
+    kpi_y1_total_label:'Kabuuan ng Taon 1',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'Lahat ng 11 distrito',
+    sb_dashboard:'Dashboard',
+    sb_performance:'Performance',
+    sb_program:'Programa',
+    sb_spend_monitor:'Spend Monitor',
+    select_language:'Pumili ng Wika',
+    status_active:'Aktibo',
+    y1_window_short:'Ene 2026 – Hun 2027',
+    y2_window_short:'Hul 2027 – Hun 2028'
+  },
+  zh: {
+    nav_overview:'總覽', nav_funds:'資金分配', nav_districts:'學區', nav_outcomes:'成果', nav_budget:'預算明細', nav_timeline:'時間表', nav_contacts:'聯絡資訊', nav_spenddown:'支出進度監測',
+    topbar_title:'EEO 數據智能',
+    overview_title:'計畫總覽',
+    overview_sub:'本州平等就業機會 (EEO) 創新最佳實踐補助計畫的全州概覽,涵蓋加州 11 個社區大學學區。',
+    meta_monitor:'計畫監督', meta_grantid:'補助編號', meta_start:'起始日期', meta_duration:'資助週期', meta_status:'狀態',
+    kpi_total_funding:'補助金總額', kpi_across:'涵蓋 11 個學區',
+    kpi_total_districts:'學區總數', kpi_all_submitted:'全部已提交',
+    kpi_tier1:'第 1 級學區', kpi_tier1_sub:'平均每區 $150K',
+    kpi_tier2:'第 2 級學區', kpi_tier2_sub:'每區 $100K',
+    kpi_lift:'LIFT 聯盟', kpi_focus:'重點領域', kpi_focus_sub:'導師制 · 培訓 · 招聘 · 科技',
+    lift_title:'LIFT 聯盟 — 明日領導力學院',
+    lift_desc:'11 個學區中的四個 — Antelope Valley CCD(第 6 區)、Citrus CCD(第 8 區)、Peralta CCD(第 3 區)和 West Valley-Mission CCD(第 4 區)— 是史無前例的 10 校 10 區全州聯盟成員,在加州社區大學系統中實施共享的「導師與配對專業平台」。',
+    chart_tier_dist:'按等級的資金分配', chart_total_dist:'總分配',
+    chart_focus_areas:'計畫重點領域', chart_by_type:'按計畫類型',
+    table_district_summary:'學區摘要',
+    th_district:'學區', th_tier:'等級', th_funding:'資金', th_y1:'第 1 年', th_y2:'第 2 年', th_focus:'主要重點', th_total:'總計',
+    funds_title:'資金分配', funds_sub:'全部 11 個學區的補助金分配詳細明細',
+    kpi_total_allocated:'已分配總額', kpi_all_11:'全部 11 個學區',
+    kpi_tier1_total:'第 1 級總計', kpi_7dist:'7 個學區',
+    kpi_tier2_total:'第 2 級總計', kpi_4dist:'4 個學區 × $100K',
+    kpi_y1_total:'第 1 年總計', kpi_y1_sub:'2026 年 1 月 – 2027 年 6 月',
+    chart_funding_district:'按學區的資金', chart_direct:'直接分配',
+    chart_tier_split:'等級分布', chart_y1y2:'第 1 年 vs. 第 2 年支出', chart_by_dist:'按學區',
+    table_alloc_detail:'學區層級分配詳情',
+    districts_title:'學區簡介', districts_sub:'全部 11 個參與的社區大學學區',
+    filter_by:'篩選依據:', filter_all:'所有學區', filter_tier1:'第 1 級', filter_tier2:'第 2 級', filter_lift:'LIFT 聯盟',
+    outcomes_title:'計畫成果', outcomes_sub:'每個學區提案中可衡量的成果與目標',
+    budget_title:'預算明細', budget_sub:'按物件代碼劃分的支出,分為第 1 年(2026 年 1 月 – 2027 年 6 月)和第 2 年(2027 年 7 月 – 2028 年 6 月)。間接成本按比例分攤至每年。',
+    timeline_title:'實施時間表', timeline_sub:'2 年資助週期 · 2026 年 1 月 1 日 → 2028 年 6 月 30 日',
+    chart_yearly:'逐年支出概況', chart_all_districts:'所有學區',
+    tl_y1:'第 1 年(2026 年 1 月 – 2027 年 6 月)', tl_y2:'第 2 年(2027 年 7 月 – 2028 年 6 月)',
+    contacts_title:'學區聯絡資訊', contacts_sub:'計畫負責人、副負責人和財務報告人',
+    spend_title:'支出進度監測',
+    spend_sub:'追蹤 2 年資助週期內的補助金支出,並標記有支出不足風險的學區',
+    underspend_title:'⚠ 支出不足風險警示',
+    calculating:'計算中...',
+    underspend_desc:'當學區的支出進度設定為「緩慢」、「快速」或「資金不足」時,該學區將被標記。在下方表格中將進度設為「中等」即可清除標記。',
+    spend_table_title:'學區支出進度詳情',
+    spend_table_sub:'分配 vs. 逐年支出 · 2 年週期',
+    th_total_grant:'補助金總額',
+    th_y1_budget:'第 1 年預算',
+    th_y2_budget:'第 2 年預算',
+    th_disbursed_pct:'已撥付佔總額百分比',
+    th_spend_pace:'支出進度',
+    th_status:'狀態',
+    kpi_total_grant_label:'補助金總額',
+    kpi_y1_budget_label:'第 1 年預算',
+    kpi_y2_budget_label:'第 2 年預算',
+    kpi_all_11_districts:'全部 11 個學區',
+    kpi_y1_window:'佔補助金 · 2026 年 1 月 – 2027 年 6 月',
+    kpi_y2_window:'佔補助金 · 2027 年 7 月 – 2028 年 6 月',
+    pace_slow:'緩慢', pace_moderate:'中等', pace_fast:'快速', pace_underfunded:'資金不足',
+    status_on:'進度正常', status_off:'進度落後',
+    th_direct_funding:'總資金',
+    th_pct_total:'佔總額 %',
+    th_cccco_disbursed:'CCCCO 已撥付',
+    th_cccco_disbursed_rate:'CCCCO 撥付率',
+    all_districts_total:'全部 11 個學區 · 總計 $1,399,997',
+    role_project_lead:'計畫負責人',
+    role_alt_project_lead:'計畫副負責人',
+    role_fiscal_reporter:'財務報告人',
+    role_plan_approver:'計畫核准人',
+    all_clear:'✓ 所有學區進度正常 — 未偵測到支出不足風險。',
+    flagged_one:'個學區已被標記',
+    flagged_many:'個學區已被標記',
+    tl_total:'總計', tl_pace_label:'進度:',
+    kpi_y1_total_label:'第 1 年總計',
+    overview_lift_sub:'AVC · Citrus · Peralta · WVM',
+    spend_for_grant_total:'全部 11 個學區',
+    sb_dashboard:'儀表板',
+    sb_performance:'績效',
+    sb_program:'計畫',
+    sb_spend_monitor:'支出監測',
+    select_language:'選擇語言',
+    status_active:'進行中',
+    y1_window_short:'2026年1月–2027年6月',
+    y2_window_short:'2027年7月–2028年6月'
   }
 };
 
 let currentLang = 'en';
+// Global translator — render functions call t(key) to fetch the active locale's string
+function t(key) {
+  const dict = translations[currentLang] || translations.en;
+  return (dict && dict[key]) || (translations.en && translations.en[key]) || key;
+}
 function applyTranslation(lang) {
-  const t = translations[lang] || translations.en;
+  const dict = translations[lang] || translations.en;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (t[key]) el.textContent = t[key];
+    if (dict[key]) el.textContent = dict[key];
   });
   document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
 }
@@ -1097,13 +1453,15 @@ function setLang(lang) {
   document.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
   const chosen = document.querySelector(`.lang-option[onclick="setLang('${lang}')"]`);
   if (chosen) chosen.classList.add('active');
-  const names = { en:'English', es:'Español', vi:'Tiếng Việt', ar:'العربية', tl:'Tagalog' };
+  const names = { en:'English', es:'Español', vi:'Tiếng Việt', ar:'العربية', tl:'Tagalog', zh:'繁體中文' };
   document.getElementById('transLabel').textContent = lang === 'en' ? 'Translate' : names[lang];
   const banner = document.getElementById('transBanner');
-  const fullNames = { en:'English', es:'Spanish (Español)', vi:'Vietnamese (Tiếng Việt)', ar:'Arabic (العربية)', tl:'Tagalog' };
+  const fullNames = { en:'English', es:'Spanish (Español)', vi:'Vietnamese (Tiếng Việt)', ar:'Arabic (العربية)', tl:'Tagalog', zh:'Chinese Traditional (繁體中文)' };
   if (lang !== 'en') { banner.classList.add('show'); document.getElementById('transLangName').textContent = fullNames[lang]; }
   else banner.classList.remove('show');
   toggleTranslate();
+  // Re-render dynamic content so JS-rendered tables, KPIs, and badges pick up the new locale
+  if (typeof renderAll === 'function') renderAll();
 }
 function resetLang() { setLang('en'); }
 function toggleTranslate() { document.getElementById('transDropdown').classList.toggle('open'); }
@@ -1176,9 +1534,9 @@ function renderDistrictCards(filter) {
       </div>
       <div class="district-card-body">
         <div class="district-card-stats">
-          <div class="district-stat"><label>Tier</label><span>${d.tier}</span></div>
-          <div class="district-stat"><label>Year 1</label><span>${fmt(d.yearlyBudget.y1)}</span></div>
-          <div class="district-stat"><label>Year 2</label><span>${fmt(d.yearlyBudget.y2)}</span></div>
+          <div class="district-stat"><label>${t('th_tier')}</label><span>${d.tier}</span></div>
+          <div class="district-stat"><label>${t('th_y1')}</label><span>${fmt(d.yearlyBudget.y1)}</span></div>
+          <div class="district-stat"><label>${t('th_y2')}</label><span>${fmt(d.yearlyBudget.y2)}</span></div>
         </div>
         <div class="district-card-focus">${d.focus.map(f => '<span class="focus-tag">' + f + '</span>').join('')}</div>
         <div class="district-card-contact">
@@ -1202,12 +1560,12 @@ function renderAllocationTable() {
   const totalY1 = districts.reduce((a, d) => a + d.yearlyBudget.y1, 0);
   const totalY2 = districts.reduce((a, d) => a + d.yearlyBudget.y2, 0);
   table.innerHTML = `
-    <thead><tr><th>District</th><th>Tier</th><th>Total Funding</th><th>% of Total</th><th>Year 1</th><th>Year 2</th><th>CCCCO Disbursed</th><th>CCCCO Disbursed Rate</th></tr></thead>
+    <thead><tr><th>${t('th_district')}</th><th>${t('th_tier')}</th><th>${t('th_direct_funding')}</th><th>${t('th_pct_total')}</th><th>${t('th_y1')}</th><th>${t('th_y2')}</th><th>${t('th_cccco_disbursed')}</th><th>${t('th_cccco_disbursed_rate')}</th></tr></thead>
     <tbody>
       ${districts.map(d => `
         <tr>
           <td><strong>${d.shortName}</strong></td>
-          <td><span class="tier-badge tier${d.tier}">Tier ${d.tier}${d.lift ? '<span class="lift-mark" title="LIFT Alliance">LIFT</span>' : ''}</span></td>
+          <td><span class="tier-badge tier${d.tier}">${t('th_tier')} ${d.tier}${d.lift ? '<span class="lift-mark" title="LIFT Alliance">LIFT</span>' : ''}</span></td>
           <td class="amount">${fmt(d.funding)}</td>
           <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;font-weight:600;">${((d.funding/total)*100).toFixed(1)}%</span><div class="progress-bar-wrap" style="flex:1;min-width:60px;"><div class="progress-bar-fill" style="width:${((d.funding/total)*100).toFixed(1)}%"></div></div></div></td>
           <td class="amount">${fmt(d.yearlyBudget.y1)}</td>
@@ -1216,7 +1574,7 @@ function renderAllocationTable() {
           <td style="color:var(--text-muted);">0%</td>
         </tr>`).join('')}
       <tr style="background:var(--bg-surface-2);">
-        <td colspan="2"><strong>Total</strong></td>
+        <td colspan="2"><strong>${t('th_total')}</strong></td>
         <td class="amount"><strong>${fmt(total)}</strong></td>
         <td><strong>100%</strong></td>
         <td class="amount"><strong>${fmt(totalY1)}</strong></td>
@@ -1257,13 +1615,13 @@ function renderBudget() {
         </div>
         <div class="budget-year-summary">
           <div class="budget-year-pill">
-            <div class="budget-year-pill-label">Year 1</div>
-            <div class="budget-year-pill-dates">Jan 2026 – Jun 2027</div>
+            <div class="budget-year-pill-label">${t('th_y1')}</div>
+            <div class="budget-year-pill-dates">${t('y1_window_short')}</div>
             <div class="budget-year-pill-amount">${fmt(d.yearlyBudget.y1)}</div>
           </div>
           <div class="budget-year-pill">
-            <div class="budget-year-pill-label">Year 2</div>
-            <div class="budget-year-pill-dates">Jul 2027 – Jun 2028</div>
+            <div class="budget-year-pill-label">${t('th_y2')}</div>
+            <div class="budget-year-pill-dates">${t('y2_window_short')}</div>
             <div class="budget-year-pill-amount">${fmt(d.yearlyBudget.y2)}</div>
           </div>
         </div>
@@ -1301,12 +1659,21 @@ function renderTimeline() {
 }
 
 /* ════════════ CONTACTS ════════════ */
+// Map English role text in data → i18n key, so contact roles translate alongside the rest of the UI
+const ROLE_KEYS = {
+  'Project Lead': 'role_project_lead',
+  'Alternate Project Lead': 'role_alt_project_lead',
+  'Plan Approver': 'role_plan_approver',
+  'Fiscal Reporter': 'role_fiscal_reporter',
+};
+function translateRole(r) { return ROLE_KEYS[r] ? t(ROLE_KEYS[r]) : r; }
+
 function renderContacts() {
   const grid = document.getElementById('contacts-grid');
   if (!grid) return;
   grid.innerHTML = districts.map(d => {
     const people = [d.contact, d.altContact, d.fiscalReporter, d.planApprover].filter(Boolean);
-    const tierLabel = d.lift ? 'LIFT Alliance · ' + d.liftRegion : 'Tier ' + d.tier;
+    const tierLabel = d.lift ? `${t('kpi_lift')} · ${d.liftRegion}` : `${t('th_tier')} ${d.tier}`;
     return `
       <div class="contact-card">
         <div class="contact-card-header">
@@ -1320,7 +1687,7 @@ function renderContacts() {
               <div class="contact-avatar">${p.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}</div>
               <div class="contact-info">
                 <div class="contact-name">${p.name}</div>
-                <div class="contact-role">${p.role}</div>
+                <div class="contact-role">${translateRole(p.role)}</div>
                 <a class="contact-email" href="mailto:${p.email}">${p.email}</a>
                 ${p.phone ? `<a class="contact-phone" href="tel:${p.phone.replace(/[^0-9+]/g,'')}">${p.phone}</a>` : ''}
               </div>
@@ -1394,8 +1761,8 @@ function initCharts() {
     type:'bar',
     data:{ labels:districts.map(d => d.shortName),
       datasets:[
-        { label:'Year 1', data:districts.map(d => d.yearlyBudget.y1), backgroundColor:C.medBlue, borderRadius:4, borderSkipped:false },
-        { label:'Year 2', data:districts.map(d => d.yearlyBudget.y2), backgroundColor:C.darkBlue, borderRadius:4, borderSkipped:false }
+        { label:t('th_y1'), data:districts.map(d => d.yearlyBudget.y1), backgroundColor:C.medBlue, borderRadius:4, borderSkipped:false },
+        { label:t('th_y2'), data:districts.map(d => d.yearlyBudget.y2), backgroundColor:C.darkBlue, borderRadius:4, borderSkipped:false }
       ] },
     options:{ ...baseOpts,
       plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label:ctx => ' ' + ctx.dataset.label + ': $' + ctx.raw.toLocaleString() } } },
@@ -1408,8 +1775,8 @@ function initCharts() {
     type:'bar',
     data:{ labels:districts.map(d => d.shortName),
       datasets:[
-        { label:'Year 1 (Jan 2026 – Jun 2027)', data:districts.map(d => d.yearlyBudget.y1), backgroundColor:C.medBlue, borderRadius:4, borderSkipped:false },
-        { label:'Year 2 (Jul 2027 – Jun 2028)', data:districts.map(d => d.yearlyBudget.y2), backgroundColor:C.darkBlue, borderRadius:4, borderSkipped:false }
+        { label:t('tl_y1'), data:districts.map(d => d.yearlyBudget.y1), backgroundColor:C.medBlue, borderRadius:4, borderSkipped:false },
+        { label:t('tl_y2'), data:districts.map(d => d.yearlyBudget.y2), backgroundColor:C.darkBlue, borderRadius:4, borderSkipped:false }
       ] },
     options:{ ...baseOpts,
       plugins:{ ...baseOpts.plugins, tooltip:{ callbacks:{ label:ctx => ' ' + ctx.dataset.label + ': $' + ctx.raw.toLocaleString() } } },
@@ -1428,7 +1795,7 @@ function toggleDistrictStatus(btn, id) {
   localStorage.setItem('districtStatuses', JSON.stringify(districtStatuses));
   btn.dataset.on = isNowOff ? '0' : '1';
   btn.style.background = isNowOff ? '#c53030' : '#1a7a3c';
-  btn.textContent = isNowOff ? 'Off Track' : 'On Track';
+  btn.textContent = isNowOff ? t('status_off') : t('status_on');
   renderUnderspendList();
   renderUnderspendChart();
 }
@@ -1451,7 +1818,7 @@ function toggleDistrictPace(btn, id) {
   localStorage.setItem('districtPaces', JSON.stringify(districtPaces));
   btn.dataset.pace = next;
   btn.style.background = PACE_COLOR[next];
-  btn.textContent = PACE_LABEL[next];
+  btn.textContent = t('pace_' + next);
   // refresh underspend alerts/chart so they re-flag based on the new pace
   renderUnderspendList();
   renderUnderspendChart();
@@ -1521,7 +1888,7 @@ function renderUnderspendList() {
   const flagged = flaggedDistricts();
   const countEl = document.getElementById('underspend-count');
   if (countEl) {
-    countEl.textContent = flagged.length + ' District' + (flagged.length !== 1 ? 's' : '') + ' Flagged';
+    countEl.textContent = flagged.length + ' ' + (flagged.length === 1 ? t('flagged_one') : t('flagged_many'));
     countEl.style.background = flagged.length === 0 ? '#1a7a3c' : '#c53030';
     countEl.style.color = '#fff';
     countEl.style.padding = '3px 10px';
@@ -1532,23 +1899,23 @@ function renderUnderspendList() {
   const listEl = document.getElementById('underspend-list');
   if (listEl) {
     if (flagged.length === 0) {
-      listEl.innerHTML = '<div style="padding:16px;color:var(--success);font-weight:600;">&#10003; All districts are on track — no underspend risks detected.</div>';
+      listEl.innerHTML = '<div style="padding:16px;color:var(--success);font-weight:600;">' + t('all_clear') + '</div>';
     } else {
       listEl.innerHTML = flagged.map(d => {
         const y1Pct = ((d.yearlyBudget.y1/d.funding)*100).toFixed(1);
         const y2Pct = ((d.yearlyBudget.y2/d.funding)*100).toFixed(1);
         const pace = districtPaces[d.id] || 'moderate';
-        const paceLabel = PACE_LABEL[pace];
+        const paceLabel = t('pace_' + pace);
         const paceColor = PACE_COLOR[pace];
         const isOffTrack = districtStatuses[d.id] === 'off';
         const flagBadges = [];
-        if (pace !== 'moderate') flagBadges.push(`<span style="background:${paceColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${paceLabel.toUpperCase()}</span>`);
-        if (isOffTrack) flagBadges.push(`<span style="background:#c53030;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">OFF TRACK</span>`);
+        if (pace !== 'moderate') flagBadges.push(`<span style="background:${paceColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;">${paceLabel}</span>`);
+        if (isOffTrack) flagBadges.push(`<span style="background:#c53030;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;text-transform:uppercase;">${t('status_off')}</span>`);
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
           <div><strong>${d.shortName}</strong><br><span style="font-size:12px;color:var(--text-muted)">${d.program.slice(0,60)}...</span></div>
           <div style="text-align:right;min-width:200px;">
             <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;">${flagBadges.join('')}</div>
-            <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:4px;">Y1: ${y1Pct}% | Y2: ${y2Pct}% | Total: ${fmt(d.funding)}</span>
+            <span style="font-size:12px;color:var(--text-muted);display:block;margin-top:4px;">Y1: ${y1Pct}% | Y2: ${y2Pct}% | ${t('th_total')}: ${fmt(d.funding)}</span>
           </div>
         </div>`;
       }).join('');
@@ -1562,9 +1929,9 @@ function renderSpendDown() {
   const kpiRow = document.getElementById('spend-kpi-row');
   if (kpiRow) {
     kpiRow.innerHTML = `
-      <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label">Total Grant</div><div class="kpi-value blue">${fmt(totalGrant)}</div><div class="kpi-sub">All 11 districts</div></div>
-      <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label">Year 1 Budget</div><div class="kpi-value medium-blue">${fmt(totalY1)}</div><div class="kpi-sub">${((totalY1/totalGrant)*100).toFixed(1)}% · Jan 2026 – Jun 2027</div></div>
-      <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label">Year 2 Budget</div><div class="kpi-value gold">${fmt(totalY2)}</div><div class="kpi-sub">${((totalY2/totalGrant)*100).toFixed(1)}% · Jul 2027 – Jun 2028</div></div>`;
+      <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label">${t('kpi_total_grant_label')}</div><div class="kpi-value blue">${fmt(totalGrant)}</div><div class="kpi-sub">${t('spend_for_grant_total')}</div></div>
+      <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label">${t('kpi_y1_budget_label')}</div><div class="kpi-value medium-blue">${fmt(totalY1)}</div><div class="kpi-sub">${((totalY1/totalGrant)*100).toFixed(1)}% ${t('kpi_y1_window')}</div></div>
+      <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label">${t('kpi_y2_budget_label')}</div><div class="kpi-value gold">${fmt(totalY2)}</div><div class="kpi-sub">${((totalY2/totalGrant)*100).toFixed(1)}% ${t('kpi_y2_window')}</div></div>`;
   }
 
   renderUnderspendList();
@@ -1575,15 +1942,16 @@ function renderSpendDown() {
     tbody.innerHTML = districts.map(d => {
       const isOffTrack = districtStatuses[d.id] === 'off';
       const statusColor = isOffTrack ? '#c53030' : '#1a7a3c';
-      const statusText = isOffTrack ? 'Off Track' : 'On Track';
+      const statusText = isOffTrack ? t('status_off') : t('status_on');
       // Disbursed % of total — 0% across the board because disbursement hasn't started
       const disbursedPct = d.funding === 0 ? 0 : (d.cccoDisbursed / d.funding) * 100;
       // Spend pace — defaults to "Moderate"; click cycles Slow → Moderate → Fast → Underfunded
       const pace = PACE_CYCLE.includes(districtPaces[d.id]) ? districtPaces[d.id] : 'moderate';
       const paceColor = PACE_COLOR[pace];
-      const paceText  = PACE_LABEL[pace];
+      const paceText  = t('pace_' + pace);
+      const tierLabel = d.tier === 1 ? `${t('th_tier')} 1` : `${t('th_tier')} 2 / LIFT`;
       return `<tr>
-        <td><strong>${d.shortName}</strong><br><span style="font-size:11px;color:var(--text-muted)">${d.tier === 1 ? 'Tier 1' : 'Tier 2 / LIFT'}</span></td>
+        <td><strong>${d.shortName}</strong><br><span style="font-size:11px;color:var(--text-muted)">${tierLabel}</span></td>
         <td class="amount">${fmt(d.funding)}</td>
         <td class="amount">${fmt(d.yearlyBudget.y1)}</td>
         <td class="amount">${fmt(d.yearlyBudget.y2)}</td>
@@ -1598,16 +1966,26 @@ function renderSpendDown() {
   }
 }
 
-/* ════════════ INIT ════════════ */
-document.addEventListener('DOMContentLoaded', () => {
+/* ════════════ RE-RENDER ON LANGUAGE CHANGE ════════════ */
+function renderAll() {
   renderOverviewTable();
-  renderDistrictCards('all');
+  // preserve current district filter via explicit data-filter
+  const activeFilter = document.querySelector('.filter-btn.active');
+  const filterKey = activeFilter ? (activeFilter.dataset.filter || 'all') : 'all';
+  renderDistrictCards(filterKey);
   renderAllocationTable();
   renderOutcomes();
   renderBudget();
   renderTimeline();
   renderContacts();
   renderSpendDown();
+  // Re-init charts so legend labels translate alongside the rest of the UI
+  if (typeof Chart !== 'undefined') initCharts();
+}
+
+/* ════════════ INIT ════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
   requestAnimationFrame(() => initCharts());
 });
 </script>
