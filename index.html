@@ -1,5 +1,5 @@
-<!DOCTYPE html>  
-<html lang="en" data-theme="light"> 
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1529,7 +1529,7 @@
                   <th data-i18n="th_district">District</th>
                   <th data-i18n="th_tier">Tier</th>
                   <th data-i18n="th_funding">Funding</th>
-                  <th data-i18n="th_CCCCO DISBURSED">CCCCO Disbursed</th>
+                  <th data-i18n="th_indirect">Indirect</th>
                   <th data-i18n="th_focus">Primary Focus</th>
                   <th>LIFT</th>
                 </tr>
@@ -1570,9 +1570,9 @@
           </div>
           <div class="kpi-card">
             <div class="kpi-accent-bar grey"></div>
-            <div class="kpi-label" data-i18n="kpi_CCCCO DISBURSED_total">Total CCCCO DISBURSED</div>
+            <div class="kpi-label" data-i18n="kpi_indirect_total">Total Indirect</div>
             <div class="kpi-value grey">~$53K</div>
-            <div class="kpi-sub" data-i18n="kpi_CCCCO DISBURSED_sub">Avg 4.8% of direct costs</div>
+            <div class="kpi-sub" data-i18n="kpi_indirect_sub">Avg 4.8% of direct costs</div>
           </div>
         </div>
 
@@ -1594,10 +1594,10 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title" data-i18n="chart_CCCCO DISBURSED">CCCCO DISBURSED Cost Rates</div>
+              <div class="chart-title" data-i18n="chart_indirect">Indirect Cost Rates</div>
               <div class="chart-label" data-i18n="chart_pct">By District %</div>
             </div>
-            <div class="chart-wrap"><canvas id="CCCCO DISBURSEDChart"></canvas></div>
+            <div class="chart-wrap"><canvas id="indirectChart"></canvas></div>
           </div>
         </div>
 
@@ -1815,7 +1815,7 @@ const districts = [
   {
     id: 'ahc', name: 'Allan Hancock Joint CCD', shortName: 'Allan Hancock',
     program: 'AHC Professional Development and EEO Representative Programs',
-    tier: 1, funding: 100000, CCCCO DISBURSEDFunds: 4762, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 100000, indirectFunds: 4762, indirectPct: '4.76%',
     address: '800 S. College Drive, Santa Maria, CA 93454', lift: false,
     focus: ['Mentorship', 'Training', 'Hiring Equity'],
     outcomes: [
@@ -1829,13 +1829,13 @@ const districts = [
     contact: { name: 'LeeAnne McNulty', role: 'Project Lead', email: 'leeanne.mcnulty@hancockcollege.edu' },
     altContact: { name: 'Craig Bach Ph.D.', role: 'Project Lead', email: 'craig.bach@hancockcollege.edu' },
     fiscalReporter: { name: 'Laura Becker', role: 'Fiscal Reporter', email: 'laura.becker@hancockcollege.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 46080, 'Employee Benefits (3000)': 9999, 'Supplies & Materials (4000)': 1159, 'Other Operating & Services (5000)': 38000, 'CCCCO DISBURSED Costs (7000)': 4762 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 46080, 'Employee Benefits (3000)': 9999, 'Supplies & Materials (4000)': 1159, 'Other Operating & Services (5000)': 38000, 'Indirect Costs (7000)': 4762 },
     yearlyBudget: { y1: 14055, y2: 44053, y3: 41892 }, primaryFocus: 'Hiring Equity & Mentorship'
   },
   {
     id: 'avc', name: 'Antelope Valley CCD', shortName: 'Antelope Valley',
     program: 'LIFT Mentor Match Pilot Program - AVC',
-    tier: 2, funding: 100000, CCCCO DISBURSEDFunds: 0, CCCCO DISBURSEDPct: '0%',
+    tier: 2, funding: 100000, indirectFunds: 0, indirectPct: '0%',
     address: '3041 West Avenue K, Lancaster, CA 93536', lift: true, liftRegion: 'Region 6',
     focus: ['Mentorship', 'Technology Platform', 'Staff Development'],
     outcomes: [
@@ -1855,7 +1855,7 @@ const districts = [
   {
     id: 'citrus', name: 'Citrus CCD', shortName: 'Citrus CCD',
     program: 'LIFT Mentor Match Pilot Program',
-    tier: 2, funding: 100000, CCCCO DISBURSEDFunds: 0, CCCCO DISBURSEDPct: '0%',
+    tier: 2, funding: 100000, indirectFunds: 0, indirectPct: '0%',
     address: 'Glendora, CA', lift: true, liftRegion: 'Region 8',
     focus: ['Mentorship', 'Technology Platform', 'Classified Staff Equity'],
     outcomes: [
@@ -1869,13 +1869,13 @@ const districts = [
     contact: { name: 'My Chau', role: 'Project Lead', email: 'mchau@citruscollege.edu' },
     altContact: { name: 'Greg Schulz Ed.D.', role: 'Plan Approver', email: 'gschulz@citruscollege.edu' },
     fiscalReporter: { name: 'Claudette Dain', role: 'Fiscal Reporter', email: 'cdain@citruscollege.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 18000, 'Employee Benefits (3000)': 1060, 'Other Operating & Services (5000)': 74940, 'CCCCO DISBURSED (7000)': 5000 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 18000, 'Employee Benefits (3000)': 1060, 'Other Operating & Services (5000)': 74940, 'Indirect (7000)': 5000 },
     yearlyBudget: { y1: 15000, y2: 40500, y3: 44500 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
     id: 'kern', name: 'Kern CCD', shortName: 'Kern CCD',
     program: 'VR EEO Faculty Development and Peer Mentoring Program',
-    tier: 1, funding: 150000, CCCCO DISBURSEDFunds: 7496, CCCCO DISBURSEDPct: '5%',
+    tier: 1, funding: 150000, indirectFunds: 7496, indirectPct: '5%',
     address: '2100 Chester Avenue, Bakersfield, CA 93301', lift: false,
     focus: ['VR Technology', 'Faculty Development', 'Peer Mentoring'],
     outcomes: [
@@ -1890,13 +1890,13 @@ const districts = [
     contact: { name: 'Bobby Becka', role: 'Project Lead', email: 'bobby.becka@kccd.edu' },
     altContact: { name: 'Rachel Tatro-Duarte', role: 'Project Lead', email: 'rachel.tatroduarte@portervillecollege.edu' },
     fiscalReporter: { name: 'Cathi Jacob', role: 'Fiscal Reporter', email: 'cjacob@kccd.edu' },
-    budgetHighlights: { 'Certificated Salaries (1000)': 32660, 'Employee Benefits (3000)': 7074, 'Supplies & Equipment (4000)': 90750, 'Services (5000)': 12020, 'CCCCO DISBURSED (7000)': 7496 },
+    budgetHighlights: { 'Certificated Salaries (1000)': 32660, 'Employee Benefits (3000)': 7074, 'Supplies & Equipment (4000)': 90750, 'Services (5000)': 12020, 'Indirect (7000)': 7496 },
     yearlyBudget: { y1: 50735, y2: 71503, y3: 27762 }, primaryFocus: 'VR Faculty Development'
   },
   {
     id: 'mtsac', name: 'Mt. San Antonio CCD', shortName: 'Mt. SAC',
     program: 'Advancing Equity and Belonging Through Mentorship and Restorative Practices',
-    tier: 1, funding: 150000, CCCCO DISBURSEDFunds: 7142, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 150000, indirectFunds: 7142, indirectPct: '4.76%',
     address: '1100 N. Grand Avenue, Walnut, CA 91789', lift: false,
     focus: ['Mentorship (NESP)', 'Restorative Justice', 'Employee Retention'],
     outcomes: [
@@ -1911,13 +1911,13 @@ const districts = [
     contact: { name: 'Adrienne Price', role: 'Project Lead', email: 'aprice@mtsac.edu' },
     altContact: null,
     fiscalReporter: { name: 'Delana Miller', role: 'Fiscal Reporter', email: 'dmiller102@mtsac.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 12000, 'Non-Instructional Salaries (2000)': 67925, 'Employee Benefits (3000)': 6576, 'Supplies & Materials (4000)': 14857, 'Other Operating & Services (5000)': 41500, 'CCCCO DISBURSED (7000)': 7142 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 12000, 'Non-Instructional Salaries (2000)': 67925, 'Employee Benefits (3000)': 6576, 'Supplies & Materials (4000)': 14857, 'Other Operating & Services (5000)': 41500, 'Indirect (7000)': 7142 },
     yearlyBudget: { y1: 38000, y2: 64000, y3: 48000 }, primaryFocus: 'Mentorship & Restorative Justice'
   },
   {
     id: 'nocccd', name: 'North Orange County CCD', shortName: 'North Orange',
     program: 'Equity First: Advancing Inclusive Hiring Through Training, Voice, and Data',
-    tier: 1, funding: 150000, CCCCO DISBURSEDFunds: 7142, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 150000, indirectFunds: 7142, indirectPct: '4.76%',
     address: '1830 Romneya Drive, Anaheim, CA 92801', lift: false,
     focus: ['Hiring Equity', 'EEO Training', 'Student Voice', 'Data Analytics'],
     outcomes: [
@@ -1932,13 +1932,13 @@ const districts = [
     contact: { name: 'Lisa King GPC', role: 'Project Lead', email: 'lking@nocccd.edu' },
     altContact: { name: 'Mylene Daniels', role: 'Project Lead', email: 'mdaniels@nocccd.edu' },
     fiscalReporter: { name: 'Erika Almaraz', role: 'Fiscal Reporter', email: 'ealmaraz@nocccd.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 14127, 'Supplies & Materials (4000)': 8000, 'Consulting/Video Production (5000)': 100000, 'Student Compensation (5000)': 40000, 'CCCCO DISBURSED (7000)': 7142 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 14127, 'Supplies & Materials (4000)': 8000, 'Consulting/Video Production (5000)': 100000, 'Student Compensation (5000)': 40000, 'Indirect (7000)': 7142 },
     yearlyBudget: { y1: 22000, y2: 71000, y3: 57000 }, primaryFocus: 'Hiring Equity & Student Inclusion'
   },
   {
     id: 'peralta', name: 'Peralta CCD', shortName: 'Peralta CCD',
     program: 'Peralta Community College Mentor Match Program',
-    tier: 2, funding: 100000, CCCCO DISBURSEDFunds: 5000, CCCCO DISBURSEDPct: '5%',
+    tier: 2, funding: 100000, indirectFunds: 5000, indirectPct: '5%',
     address: '333 E. Eighth Street, Oakland, CA 94606', lift: true, liftRegion: 'Region 3',
     focus: ['Mentorship', 'Technology Platform', 'Classified Staff Equity'],
     outcomes: [
@@ -1952,13 +1952,13 @@ const districts = [
     contact: { name: 'Emily Kaplan', role: 'Project Lead', email: 'ekaplan@peralta.edu' },
     altContact: { name: 'Jamille Teer', role: 'Alternate Project Lead', email: 'jteer@peralta.edu' },
     fiscalReporter: { name: 'Emily Kaplan', role: 'Fiscal Reporter', email: 'ekaplan@peralta.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 29300, 'CCCCO DISBURSED (7000)': 5000 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 29300, 'Indirect (7000)': 5000 },
     yearlyBudget: { y1: 25580, y2: 37210, y3: 37210 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
     id: 'sdccd', name: 'San Diego CCD', shortName: 'San Diego CCD',
     program: 'TRACE: Transparent Recruitment & Accountability for Candidate Equity',
-    tier: 1, funding: 149997, CCCCO DISBURSEDFunds: 7142, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 149997, indirectFunds: 7142, indirectPct: '4.76%',
     address: '3375 Camino del Rio South, San Diego, CA 92108', lift: false,
     focus: ['Hiring Audit', 'Data Analytics', 'Policy Reform'],
     outcomes: [
@@ -1974,13 +1974,13 @@ const districts = [
     contact: { name: 'Jared Burns Dr.', role: 'Project Lead', email: 'jburns001@sdccd.edu' },
     altContact: { name: 'John Valencia', role: 'Alternate Project Lead', email: 'john@goodforothers.org' },
     fiscalReporter: { name: 'Dan Troy', role: 'Fiscal Reporter', email: 'dtroy@sdccd.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 24370, 'Non-Instructional Salaries (2000)': 38000, 'Supplies & Materials (4000)': 2605, 'Consultants & Focus Groups (5000)': 77880, 'CCCCO DISBURSED (7000)': 7142 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 24370, 'Non-Instructional Salaries (2000)': 38000, 'Supplies & Materials (4000)': 2605, 'Consultants & Focus Groups (5000)': 77880, 'Indirect (7000)': 7142 },
     yearlyBudget: { y1: 30000, y2: 60000, y3: 59997 }, primaryFocus: 'Hiring Audit & Data Analytics'
   },
   {
     id: 'smc', name: 'Santa Monica CCD', shortName: 'Santa Monica',
     program: 'Santa Monica College EEO Innovative Best Practices (IBP)',
-    tier: 1, funding: 150000, CCCCO DISBURSEDFunds: 7143, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 150000, indirectFunds: 7143, indirectPct: '4.76%',
     address: '1900 Pico Boulevard, Santa Monica, CA 90405', lift: false,
     focus: ['Professional Development', 'Mentorship', 'Employee Resource Groups'],
     outcomes: [
@@ -1994,13 +1994,13 @@ const districts = [
     contact: { name: 'Tracy Beidleman', role: 'Project Lead', email: 'beidleman_tracy@smc.edu' },
     altContact: { name: 'Diana Pennington', role: 'Project Lead', email: 'pennington_diana@smc.edu' },
     fiscalReporter: { name: 'Ann Le', role: 'Fiscal Reporter', email: 'le_ann@smc.edu' },
-    budgetHighlights: { 'Faculty Stipends / Overtime': 40000, 'Professional Development Travel (5000)': 45000, 'ERG & Consultant Support (5000)': 57857, 'CCCCO DISBURSED (7000)': 7143 },
+    budgetHighlights: { 'Faculty Stipends / Overtime': 40000, 'Professional Development Travel (5000)': 45000, 'ERG & Consultant Support (5000)': 57857, 'Indirect (7000)': 7143 },
     yearlyBudget: { y1: 0, y2: 75000, y3: 75000 }, primaryFocus: 'Workforce Belonging & ERGs'
   },
   {
     id: 'scccd', name: 'State Center CCD', shortName: 'State Center CCD',
     program: 'State Center CCD EEO IBP – FIT 2.0 (Faculty in Training)',
-    tier: 1, funding: 150000, CCCCO DISBURSEDFunds: 7143, CCCCO DISBURSEDPct: '4.76%',
+    tier: 1, funding: 150000, indirectFunds: 7143, indirectPct: '4.76%',
     address: '1171 Fulton Street, Fresno, CA 93721', lift: false,
     focus: ['Faculty Pipeline', 'Internship', 'DEIA Hiring'],
     outcomes: [
@@ -2016,13 +2016,13 @@ const districts = [
     contact: { name: 'Nickolas Trujillo', role: 'Project Lead', email: 'nickolas.trujillo@scccd.edu' },
     altContact: { name: 'Susan Soudchantho', role: 'Alternate Project Lead', email: 'susan.soudchantho@scccd.edu' },
     fiscalReporter: { name: 'David El Fattal', role: 'Fiscal Reporter', email: 'accounting@scccd.edu' },
-    budgetHighlights: { 'Faculty Coordinator 15% FTE (1000)': 25000, 'Intern & Mentor Stipends (1000)': 70000, 'Outreach & Recruitment (5000)': 20000, 'Program Marketing & Evaluation (5000)': 27857, 'CCCCO DISBURSED (7000)': 7143 },
+    budgetHighlights: { 'Faculty Coordinator 15% FTE (1000)': 25000, 'Intern & Mentor Stipends (1000)': 70000, 'Outreach & Recruitment (5000)': 20000, 'Program Marketing & Evaluation (5000)': 27857, 'Indirect (7000)': 7143 },
     yearlyBudget: { y1: 30000, y2: 60000, y3: 60000 }, primaryFocus: 'Faculty Pipeline (FIT Program)'
   },
   {
     id: 'wvm', name: 'West Valley-Mission CCD', shortName: 'West Valley-Mission',
     program: 'LIFT Mentor Match Pilot Program (Mission College)',
-    tier: 2, funding: 100000, CCCCO DISBURSEDFunds: 0, CCCCO DISBURSEDPct: '0%',
+    tier: 2, funding: 100000, indirectFunds: 0, indirectPct: '0%',
     address: '14000 Fruitvale Avenue, Saratoga, CA 95070', lift: true, liftRegion: 'Region 4',
     focus: ['Mentorship', 'Technology Platform', 'Classified Staff Equity'],
     outcomes: [
@@ -2065,14 +2065,14 @@ const translations = {
     chart_tier_dist:'Fund Allocation by Tier', chart_total_dist:'Total Distribution',
     chart_focus_areas:'Program Focus Areas', chart_by_type:'By Initiative Type',
     table_district_summary:'District Summary',
-    th_district:'District', th_tier:'Tier', th_funding:'Funding', th_CCCCO DISBURSED:'CCCCO DISBURSED', th_focus:'Primary Focus', th_total:'Total',
+    th_district:'District', th_tier:'Tier', th_funding:'Funding', th_indirect:'Indirect', th_focus:'Primary Focus', th_total:'Total',
     funds_title:'Fund Allocations', funds_sub:'Detailed breakdown of grant funding across all 11 districts',
     kpi_total_allocated:'Total Allocated', kpi_all_11:'All 11 districts',
     kpi_tier1_total:'Tier 1 Total', kpi_7dist:'7 districts',
     kpi_tier2_total:'Tier 2 Total', kpi_4dist:'4 districts × $100K',
-    kpi_CCCCO DISBURSED_total:'Total CCCCO DISBURSED', kpi_CCCCO DISBURSED_sub:'Avg 4.8% of direct costs',
+    kpi_indirect_total:'Total Indirect', kpi_indirect_sub:'Avg 4.8% of direct costs',
     chart_funding_district:'Funding by District', chart_direct:'Direct Allocation',
-    chart_tier_split:'Tier Split', chart_CCCCO DISBURSED:'CCCCO DISBURSED Cost Rates', chart_pct:'By District %',
+    chart_tier_split:'Tier Split', chart_indirect:'Indirect Cost Rates', chart_pct:'By District %',
     table_alloc_detail:'District-Level Allocation Detail',
     districts_title:'District Profiles', districts_sub:'All 11 participating community college districts',
     filter_by:'Filter by:', filter_all:'All Districts', filter_tier1:'Tier 1', filter_tier2:'Tier 2', filter_lift:'LIFT Alliance',
@@ -2102,14 +2102,14 @@ const translations = {
     chart_tier_dist:'Asignación por Nivel', chart_total_dist:'Distribución Total',
     chart_focus_areas:'Áreas de Enfoque del Programa', chart_by_type:'Por Tipo de Iniciativa',
     table_district_summary:'Resumen de Distritos',
-    th_district:'Distrito', th_tier:'Nivel', th_funding:'Financiamiento', th_CCCCO DISBURSED:'CCCCO DISBURSEDo', th_focus:'Enfoque Principal', th_total:'Total',
+    th_district:'Distrito', th_tier:'Nivel', th_funding:'Financiamiento', th_indirect:'Indirecto', th_focus:'Enfoque Principal', th_total:'Total',
     funds_title:'Asignaciones de Fondos', funds_sub:'Desglose detallado del financiamiento en los 11 distritos',
     kpi_total_allocated:'Total Asignado', kpi_all_11:'Los 11 distritos',
     kpi_tier1_total:'Total Nivel 1', kpi_7dist:'7 distritos',
     kpi_tier2_total:'Total Nivel 2', kpi_4dist:'4 distritos × $100K',
-    kpi_CCCCO DISBURSED_total:'Costos CCCCO DISBURSEDos', kpi_CCCCO DISBURSED_sub:'Promedio 4.8% de costos directos',
+    kpi_indirect_total:'Costos Indirectos', kpi_indirect_sub:'Promedio 4.8% de costos directos',
     chart_funding_district:'Financiamiento por Distrito', chart_direct:'Asignación Directa',
-    chart_tier_split:'División por Nivel', chart_CCCCO DISBURSED:'Tasas de Costos CCCCO DISBURSEDos', chart_pct:'Por Distrito %',
+    chart_tier_split:'División por Nivel', chart_indirect:'Tasas de Costos Indirectos', chart_pct:'Por Distrito %',
     table_alloc_detail:'Detalle de Asignación por Distrito',
     districts_title:'Perfiles de Distrito', districts_sub:'Los 11 distritos participantes de colegios comunitarios',
     filter_by:'Filtrar por:', filter_all:'Todos', filter_tier1:'Nivel 1', filter_tier2:'Nivel 2', filter_lift:'Alianza LIFT',
@@ -2137,14 +2137,14 @@ const translations = {
     chart_tier_dist:'Phân bổ theo cấp', chart_total_dist:'Tổng phân phối',
     chart_focus_areas:'Lĩnh vực trọng tâm', chart_by_type:'Theo loại sáng kiến',
     table_district_summary:'Tóm tắt quận',
-    th_district:'Quận', th_tier:'Cấp', th_funding:'Tài trợ', th_CCCCO DISBURSED:'Gián tiếp', th_focus:'Trọng tâm chính', th_total:'Tổng cộng',
+    th_district:'Quận', th_tier:'Cấp', th_funding:'Tài trợ', th_indirect:'Gián tiếp', th_focus:'Trọng tâm chính', th_total:'Tổng cộng',
     funds_title:'Phân bổ vốn', funds_sub:'Chi tiết phân bổ tài trợ cho cả 11 quận',
     kpi_total_allocated:'Tổng phân bổ', kpi_all_11:'Tất cả 11 quận',
     kpi_tier1_total:'Tổng Cấp 1', kpi_7dist:'7 quận',
     kpi_tier2_total:'Tổng Cấp 2', kpi_4dist:'4 quận × $100K',
-    kpi_CCCCO DISBURSED_total:'Tổng gián tiếp', kpi_CCCCO DISBURSED_sub:'TB 4.8% chi phí trực tiếp',
+    kpi_indirect_total:'Tổng gián tiếp', kpi_indirect_sub:'TB 4.8% chi phí trực tiếp',
     chart_funding_district:'Tài trợ theo quận', chart_direct:'Phân bổ trực tiếp',
-    chart_tier_split:'Phân chia cấp', chart_CCCCO DISBURSED:'Tỷ lệ chi phí gián tiếp', chart_pct:'Theo % quận',
+    chart_tier_split:'Phân chia cấp', chart_indirect:'Tỷ lệ chi phí gián tiếp', chart_pct:'Theo % quận',
     table_alloc_detail:'Chi tiết phân bổ theo quận',
     districts_title:'Hồ sơ quận', districts_sub:'Tất cả 11 quận tham gia',
     filter_by:'Lọc theo:', filter_all:'Tất cả', filter_tier1:'Cấp 1', filter_tier2:'Cấp 2', filter_lift:'Liên minh LIFT',
@@ -2172,14 +2172,14 @@ const translations = {
     chart_tier_dist:'توزيع الأموال حسب الفئة', chart_total_dist:'التوزيع الكلي',
     chart_focus_areas:'مجالات تركيز البرنامج', chart_by_type:'حسب نوع المبادرة',
     table_district_summary:'ملخص المقاطعات',
-    th_district:'المقاطعة', th_tier:'الفئة', th_funding:'التمويل', th_CCCCO DISBURSED:'غير مباشر', th_focus:'التركيز الرئيسي', th_total:'الإجمالي',
+    th_district:'المقاطعة', th_tier:'الفئة', th_funding:'التمويل', th_indirect:'غير مباشر', th_focus:'التركيز الرئيسي', th_total:'الإجمالي',
     funds_title:'تخصيصات الأموال', funds_sub:'تفصيل تمويل المنحة عبر جميع المقاطعات الـ11',
     kpi_total_allocated:'الإجمالي المخصص', kpi_all_11:'جميع المقاطعات الـ11',
     kpi_tier1_total:'إجمالي الفئة 1', kpi_7dist:'7 مقاطعات',
     kpi_tier2_total:'إجمالي الفئة 2', kpi_4dist:'4 مقاطعات × $100K',
-    kpi_CCCCO DISBURSED_total:'إجمالي غير المباشر', kpi_CCCCO DISBURSED_sub:'متوسط 4.8% من التكاليف المباشرة',
+    kpi_indirect_total:'إجمالي غير المباشر', kpi_indirect_sub:'متوسط 4.8% من التكاليف المباشرة',
     chart_funding_district:'التمويل حسب المقاطعة', chart_direct:'التخصيص المباشر',
-    chart_tier_split:'التقسيم حسب الفئة', chart_CCCCO DISBURSED:'معدلات التكاليف غير المباشرة', chart_pct:'بالنسبة للمقاطعة',
+    chart_tier_split:'التقسيم حسب الفئة', chart_indirect:'معدلات التكاليف غير المباشرة', chart_pct:'بالنسبة للمقاطعة',
     table_alloc_detail:'تفاصيل التخصيص على مستوى المقاطعة',
     districts_title:'ملفات المقاطعات', districts_sub:'جميع مقاطعات الكليات المجتمعية الـ11 المشاركة',
     filter_by:'تصفية حسب:', filter_all:'جميع المقاطعات', filter_tier1:'الفئة 1', filter_tier2:'الفئة 2', filter_lift:'تحالف LIFT',
@@ -2207,14 +2207,14 @@ const translations = {
     chart_tier_dist:'Paglalaan ng Pondo ayon sa Tier', chart_total_dist:'Kabuuang Pamamahagi',
     chart_focus_areas:'Mga Larangan ng Pokus ng Programa', chart_by_type:'Ayon sa Uri ng Inisyatibo',
     table_district_summary:'Buod ng Distrito',
-    th_district:'Distrito', th_tier:'Tier', th_funding:'Pondo', th_CCCCO DISBURSED:'Hindi Direkta', th_focus:'Pangunahing Pokus', th_total:'Kabuuan',
+    th_district:'Distrito', th_tier:'Tier', th_funding:'Pondo', th_indirect:'Hindi Direkta', th_focus:'Pangunahing Pokus', th_total:'Kabuuan',
     funds_title:'Pagbibigay-pondo', funds_sub:'Detalyadong breakdown ng grant funding sa lahat ng 11 distrito',
     kpi_total_allocated:'Kabuuang Inilaan', kpi_all_11:'Lahat ng 11 distrito',
     kpi_tier1_total:'Kabuuan ng Tier 1', kpi_7dist:'7 distrito',
     kpi_tier2_total:'Kabuuan ng Tier 2', kpi_4dist:'4 distrito × $100K',
-    kpi_CCCCO DISBURSED_total:'Kabuuang Hindi Direkta', kpi_CCCCO DISBURSED_sub:'Karaniwan 4.8% ng direktang gastos',
+    kpi_indirect_total:'Kabuuang Hindi Direkta', kpi_indirect_sub:'Karaniwan 4.8% ng direktang gastos',
     chart_funding_district:'Pondo ayon sa Distrito', chart_direct:'Direktang Paglalaan',
-    chart_tier_split:'Hatiin ng Tier', chart_CCCCO DISBURSED:'Mga Rate ng Hindi Direktang Gastos', chart_pct:'Ayon sa Distrito %',
+    chart_tier_split:'Hatiin ng Tier', chart_indirect:'Mga Rate ng Hindi Direktang Gastos', chart_pct:'Ayon sa Distrito %',
     table_alloc_detail:'Detalye ng Paglalaan sa Antas ng Distrito',
     districts_title:'Mga Profil ng Distrito', districts_sub:'Lahat ng 11 kalahok na distrito ng community college',
     filter_by:'I-filter ayon sa:', filter_all:'Lahat ng Distrito', filter_tier1:'Tier 1', filter_tier2:'Tier 2', filter_lift:'Alyansa ng LIFT',
@@ -2340,7 +2340,7 @@ function renderOverviewTable() {
       <td><strong>${d.name}</strong><br><span style="font-size:11px;color:var(--text-muted)">${d.program.length > 50 ? d.program.slice(0,50) + '…' : d.program}</span></td>
       <td><span class="tier-badge tier${d.tier}">Tier ${d.tier}</span></td>
       <td class="amount">${fmt(d.funding)}</td>
-      <td class="amount">${d.CCCCO DISBURSEDFunds > 0 ? fmt(d.CCCCO DISBURSEDFunds) : '—'}<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${d.CCCCO DISBURSEDFunds > 0 ? '(' + d.CCCCO DISBURSEDPct + ')' : ''}</span></td>
+      <td class="amount">${d.indirectFunds > 0 ? fmt(d.indirectFunds) : '—'}<span style="font-size:11px;color:var(--text-muted);margin-left:4px;">${d.indirectFunds > 0 ? '(' + d.indirectPct + ')' : ''}</span></td>
       <td style="font-size:12.5px;color:var(--text-secondary)">${d.primaryFocus}</td>
       <td>${d.lift ? '<span class="tier-badge lift">✦ LIFT</span>' : '<span style="color:var(--text-muted);font-size:12px;">—</span>'}</td>
     </tr>
@@ -2368,7 +2368,7 @@ function renderDistrictCards(filter) {
         <div class="district-card-stats">
           <div class="district-stat"><label>Tier</label><span>${d.tier}</span></div>
           <div class="district-stat"><label>Funding</label><span>${fmt(d.funding)}</span></div>
-          <div class="district-stat"><label>CCCCO DISBURSED</label><span>${d.CCCCO DISBURSEDPct}</span></div>
+          <div class="district-stat"><label>Indirect</label><span>${d.indirectPct}</span></div>
         </div>
         <div class="district-card-focus">
           ${d.focus.map(f => '<span class="focus-tag">' + f + '</span>').join('')}
@@ -2402,8 +2402,8 @@ function renderAllocationTable() {
         <th>Tier</th>
         <th>Direct Funding</th>
         <th>% of Total</th>
-        <th>CCCCO DISBURSED</th>
-        <th>CCCCO DISBURSED Rate</th>
+        <th>Indirect</th>
+        <th>Indirect Rate</th>
         <th>LIFT</th>
       </tr>
     </thead>
@@ -2419,8 +2419,8 @@ function renderAllocationTable() {
               <div class="progress-bar-wrap" style="flex:1;min-width:60px;"><div class="progress-bar-fill" style="width:${((d.funding/total)*100).toFixed(1)}%"></div></div>
             </div>
           </td>
-          <td class="amount">${d.CCCCO DISBURSEDFunds > 0 ? fmt(d.CCCCO DISBURSEDFunds) : '—'}</td>
-          <td style="color:var(--text-secondary)">${d.CCCCO DISBURSEDPct}</td>
+          <td class="amount">${d.indirectFunds > 0 ? fmt(d.indirectFunds) : '—'}</td>
+          <td style="color:var(--text-secondary)">${d.indirectPct}</td>
           <td>${d.lift ? '<span class="tier-badge lift">LIFT</span>' : '—'}</td>
         </tr>
       `).join('')}
@@ -2616,9 +2616,9 @@ function initCharts() {
     data: {
       labels: districts.map(d => d.shortName),
       datasets: [
-        { label: 'Direct Funding', data: districts.map(d => d.funding - d.CCCCO DISBURSEDFunds),
+        { label: 'Direct Funding', data: districts.map(d => d.funding - d.indirectFunds),
           backgroundColor: districts.map(d => d.tier === 1 ? C.darkBlue : C.medBlue), borderRadius: 6, borderSkipped: false },
-        { label: 'CCCCO DISBURSED Costs', data: districts.map(d => d.CCCCO DISBURSEDFunds),
+        { label: 'Indirect Costs', data: districts.map(d => d.indirectFunds),
           backgroundColor: C.gold, borderRadius: 6, borderSkipped: false }
       ]
     },
@@ -2642,14 +2642,14 @@ function initCharts() {
     options: { ...baseOpts, plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': $' + ctx.raw.toLocaleString() } } } }
   });
 
-  // 5. CCCCO DISBURSED BAR
-  const ic = document.getElementById('CCCCO DISBURSEDChart');
-  if (ic) chartInstances.CCCCO DISBURSED = new Chart(ic, {
+  // 5. INDIRECT BAR
+  const ic = document.getElementById('indirectChart');
+  if (ic) chartInstances.indirect = new Chart(ic, {
     type: 'bar',
     data: {
       labels: districts.map(d => d.shortName),
-      datasets: [{ label: 'CCCCO DISBURSED Rate', data: districts.map(d => parseFloat(d.CCCCO DISBURSEDPct)),
-        backgroundColor: districts.map(d => d.CCCCO DISBURSEDFunds === 0 ? C.lightBlue : C.darkGold),
+      datasets: [{ label: 'Indirect Rate', data: districts.map(d => parseFloat(d.indirectPct)),
+        backgroundColor: districts.map(d => d.indirectFunds === 0 ? C.lightBlue : C.darkGold),
         borderRadius: 4, borderSkipped: false }]
     },
     options: { ...baseOpts,
