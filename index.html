@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html> 
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -976,6 +976,7 @@
     }
     .timeline-bar-fill.y1 { background: var(--ccc-medium-blue); }
     .timeline-bar-fill.y2 { background: var(--ccc-dark-blue); }
+    .timeline-bar-fill.y3 { background: var(--ccc-dark-gold); }
     .timeline-bar-bg { background: var(--bg-surface-2); width: 100%; }
     .timeline-bar-label { font-size: 10px; color: var(--text-muted); font-weight: 600; }
     .timeline-total {
@@ -1658,7 +1659,7 @@
       <div id="section-timeline" class="section">
         <div class="page-header">
           <h2 data-i18n="timeline_title">Implementation Timeline</h2>
-          <p data-i18n="timeline_sub">2-year budget distribution · Jan 2026 → Jun 2028</p>
+          <p data-i18n="timeline_sub">3-year budget distribution · Q3 2025-26 → Q4 2027-28</p>
         </div>
 
         <div class="chart-card-full">
@@ -1675,8 +1676,11 @@
             <div class="tl-hb">
               <div class="tl-hbi" data-i18n="tl_y1">Year 1 (25-26)</div>
               <div class="tl-hbi" data-i18n="tl_y2">Year 2 (26-27)</div>
-              iv class="tl-ht" data-i18n="th_total">Total</div>
+              <div class="tl-hbi" data-i18n="tl_y3">Year 3 (27-28)</div>
+            </div>
+            <div class="tl-ht" data-i18n="th_total">Total</div>
           </div>
+          <div id="timeline-rows"></div>
         </div>
       </div>
 
@@ -1747,6 +1751,7 @@
                                                                                                       <th>Total Grant</th>
                                                                                                       <th>Year 1 Budget</th>
                                                                                                       <th>Year 2 Budget</th>
+                                                                                                      <th>Year 3 Budget</th>
                                                                                                       <th>Y1 % of Total</th>
                                                                                                       <th>Spend Pace</th>
                                                                                                       <th>Status</th>
@@ -1756,7 +1761,8 @@
                                                               </table>
                                               </div>
                                 </div>
-        </div>
+                    </div>
+
     </main>
   </div>
 
@@ -1824,7 +1830,7 @@ const districts = [
     altContact: { name: 'Craig Bach Ph.D.', role: 'Project Lead', email: 'craig.bach@hancockcollege.edu' },
     fiscalReporter: { name: 'Laura Becker', role: 'Fiscal Reporter', email: 'laura.becker@hancockcollege.edu' },
     budgetHighlights: { 'Instructional Salaries (1000)': 46080, 'Employee Benefits (3000)': 9999, 'Supplies & Materials (4000)': 1159, 'Other Operating & Services (5000)': 38000, 'CCCCO DISBURSED Costs (7000)': 4762 },
-    yearlyBudget: { y1: 14055, y2: 44053 }, primaryFocus: 'Hiring Equity & Mentorship'
+    yearlyBudget: { y1: 14055, y2: 44053, y3: 41892 }, primaryFocus: 'Hiring Equity & Mentorship'
   },
   {
     id: 'avc', name: 'Antelope Valley CCD', shortName: 'Antelope Valley',
@@ -1844,7 +1850,7 @@ const districts = [
     altContact: { name: 'Paloma Astorga', role: 'Project Lead', email: 'paloma.astorga@avc.edu' },
     fiscalReporter: { name: 'Christos Valiotis', role: 'Fiscal Reporter', email: 'cvaliotis@avc.edu' },
     budgetHighlights: { 'Instructional Salaries (1000)': 9000, 'Non-Instructional Salaries (2000)': 34085, 'Other Operating & Services (5000)': 56915 },
-    yearlyBudget: { y1: 16830, y2: 23255 }, primaryFocus: 'LIFT Mentorship Platform'
+    yearlyBudget: { y1: 16830, y2: 23255, y3: 59915 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
     id: 'citrus', name: 'Citrus CCD', shortName: 'Citrus CCD',
@@ -1864,7 +1870,7 @@ const districts = [
     altContact: { name: 'Greg Schulz Ed.D.', role: 'Plan Approver', email: 'gschulz@citruscollege.edu' },
     fiscalReporter: { name: 'Claudette Dain', role: 'Fiscal Reporter', email: 'cdain@citruscollege.edu' },
     budgetHighlights: { 'Non-Instructional Salaries (2000)': 18000, 'Employee Benefits (3000)': 1060, 'Other Operating & Services (5000)': 74940, 'CCCCO DISBURSED (7000)': 5000 },
-    yearlyBudget: { y1: 15000, y2: 40500 }, primaryFocus: 'LIFT Mentorship Platform'
+    yearlyBudget: { y1: 15000, y2: 40500, y3: 44500 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
     id: 'kern', name: 'Kern CCD', shortName: 'Kern CCD',
@@ -1879,13 +1885,13 @@ const districts = [
       'District-wide digital lesson catalog of VR-enhanced lessons',
       'Faculty peer mentoring pairs across all disciplines',
       'Districtwide showcase of faculty VR innovations',
-      'VR content creation training using Unity tools'
+      'VR content creation training using Unity tools (Year 3)'
     ],
     contact: { name: 'Bobby Becka', role: 'Project Lead', email: 'bobby.becka@kccd.edu' },
     altContact: { name: 'Rachel Tatro-Duarte', role: 'Project Lead', email: 'rachel.tatroduarte@portervillecollege.edu' },
     fiscalReporter: { name: 'Cathi Jacob', role: 'Fiscal Reporter', email: 'cjacob@kccd.edu' },
     budgetHighlights: { 'Certificated Salaries (1000)': 32660, 'Employee Benefits (3000)': 7074, 'Supplies & Equipment (4000)': 90750, 'Services (5000)': 12020, 'CCCCO DISBURSED (7000)': 7496 },
-    yearlyBudget: { y1: 50735, y2: 71503 }, primaryFocus: 'VR Faculty Development'
+    yearlyBudget: { y1: 50735, y2: 71503, y3: 27762 }, primaryFocus: 'VR Faculty Development'
   },
   {
     id: 'mtsac', name: 'Mt. San Antonio CCD', shortName: 'Mt. SAC',
@@ -1906,7 +1912,7 @@ const districts = [
     altContact: null,
     fiscalReporter: { name: 'Delana Miller', role: 'Fiscal Reporter', email: 'dmiller102@mtsac.edu' },
     budgetHighlights: { 'Instructional Salaries (1000)': 12000, 'Non-Instructional Salaries (2000)': 67925, 'Employee Benefits (3000)': 6576, 'Supplies & Materials (4000)': 14857, 'Other Operating & Services (5000)': 41500, 'CCCCO DISBURSED (7000)': 7142 },
-    yearlyBudget: { y1: 38000, y2: 64000 }, primaryFocus: 'Mentorship & Restorative Justice'
+    yearlyBudget: { y1: 38000, y2: 64000, y3: 48000 }, primaryFocus: 'Mentorship & Restorative Justice'
   },
   {
     id: 'nocccd', name: 'North Orange County CCD', shortName: 'North Orange',
@@ -1927,7 +1933,7 @@ const districts = [
     altContact: { name: 'Mylene Daniels', role: 'Project Lead', email: 'mdaniels@nocccd.edu' },
     fiscalReporter: { name: 'Erika Almaraz', role: 'Fiscal Reporter', email: 'ealmaraz@nocccd.edu' },
     budgetHighlights: { 'Non-Instructional Salaries (2000)': 14127, 'Supplies & Materials (4000)': 8000, 'Consulting/Video Production (5000)': 100000, 'Student Compensation (5000)': 40000, 'CCCCO DISBURSED (7000)': 7142 },
-    yearlyBudget: { y1: 22000, y2: 71000 }, primaryFocus: 'Hiring Equity & Student Inclusion'
+    yearlyBudget: { y1: 22000, y2: 71000, y3: 57000 }, primaryFocus: 'Hiring Equity & Student Inclusion'
   },
   {
     id: 'peralta', name: 'Peralta CCD', shortName: 'Peralta CCD',
@@ -1947,7 +1953,7 @@ const districts = [
     altContact: { name: 'Jamille Teer', role: 'Alternate Project Lead', email: 'jteer@peralta.edu' },
     fiscalReporter: { name: 'Emily Kaplan', role: 'Fiscal Reporter', email: 'ekaplan@peralta.edu' },
     budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 29300, 'CCCCO DISBURSED (7000)': 5000 },
-    yearlyBudget: { y1: 25580, y2: 37210 }, primaryFocus: 'LIFT Mentorship Platform'
+    yearlyBudget: { y1: 25580, y2: 37210, y3: 37210 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
     id: 'sdccd', name: 'San Diego CCD', shortName: 'San Diego CCD',
@@ -1969,7 +1975,7 @@ const districts = [
     altContact: { name: 'John Valencia', role: 'Alternate Project Lead', email: 'john@goodforothers.org' },
     fiscalReporter: { name: 'Dan Troy', role: 'Fiscal Reporter', email: 'dtroy@sdccd.edu' },
     budgetHighlights: { 'Instructional Salaries (1000)': 24370, 'Non-Instructional Salaries (2000)': 38000, 'Supplies & Materials (4000)': 2605, 'Consultants & Focus Groups (5000)': 77880, 'CCCCO DISBURSED (7000)': 7142 },
-    yearlyBudget: { y1: 30000, y2: 60000 }, primaryFocus: 'Hiring Audit & Data Analytics'
+    yearlyBudget: { y1: 30000, y2: 60000, y3: 59997 }, primaryFocus: 'Hiring Audit & Data Analytics'
   },
   {
     id: 'smc', name: 'Santa Monica CCD', shortName: 'Santa Monica',
@@ -1989,7 +1995,7 @@ const districts = [
     altContact: { name: 'Diana Pennington', role: 'Project Lead', email: 'pennington_diana@smc.edu' },
     fiscalReporter: { name: 'Ann Le', role: 'Fiscal Reporter', email: 'le_ann@smc.edu' },
     budgetHighlights: { 'Faculty Stipends / Overtime': 40000, 'Professional Development Travel (5000)': 45000, 'ERG & Consultant Support (5000)': 57857, 'CCCCO DISBURSED (7000)': 7143 },
-    yearlyBudget: { y1: 0, y2: 75000 }, primaryFocus: 'Workforce Belonging & ERGs'
+    yearlyBudget: { y1: 0, y2: 75000, y3: 75000 }, primaryFocus: 'Workforce Belonging & ERGs'
   },
   {
     id: 'scccd', name: 'State Center CCD', shortName: 'State Center CCD',
@@ -2011,7 +2017,7 @@ const districts = [
     altContact: { name: 'Susan Soudchantho', role: 'Alternate Project Lead', email: 'susan.soudchantho@scccd.edu' },
     fiscalReporter: { name: 'David El Fattal', role: 'Fiscal Reporter', email: 'accounting@scccd.edu' },
     budgetHighlights: { 'Faculty Coordinator 15% FTE (1000)': 25000, 'Intern & Mentor Stipends (1000)': 70000, 'Outreach & Recruitment (5000)': 20000, 'Program Marketing & Evaluation (5000)': 27857, 'CCCCO DISBURSED (7000)': 7143 },
-    yearlyBudget: { y1: 30000, y2: 60000 }, primaryFocus: 'Faculty Pipeline (FIT Program)'
+    yearlyBudget: { y1: 30000, y2: 60000, y3: 60000 }, primaryFocus: 'Faculty Pipeline (FIT Program)'
   },
   {
     id: 'wvm', name: 'West Valley-Mission CCD', shortName: 'West Valley-Mission',
@@ -2031,7 +2037,7 @@ const districts = [
     altContact: { name: 'Amanda Marshall', role: 'Alternate Project Lead', email: 'amanda.marshall@missioncollege.edu' },
     fiscalReporter: { name: 'Danny Nguyen', role: 'Fiscal Reporter', email: 'danny.nguyen@missioncollege.edu' },
     budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 34300 },
-    yearlyBudget: { y1: 23000, y2: 38500 }, primaryFocus: 'LIFT Mentorship Platform'
+    yearlyBudget: { y1: 23000, y2: 38500, y3: 38500 }, primaryFocus: 'LIFT Mentorship Platform'
   }
 ];
 
@@ -2072,12 +2078,13 @@ const translations = {
     filter_by:'Filter by:', filter_all:'All Districts', filter_tier1:'Tier 1', filter_tier2:'Tier 2', filter_lift:'LIFT Alliance',
     outcomes_title:'Program Outcomes', outcomes_sub:"Measurable deliverables and targets from each district's proposal",
     budget_title:'Budget Breakdown', budget_sub:'Object-code expenditures across the grant portfolio',
-    timeline_title:'Implementation Timeline', timeline_sub:'2-year budget distribution · Jan 2026 → Jun 2028',
+    timeline_title:'Implementation Timeline', timeline_sub:'3-year budget distribution · Q3 2025-26 → Q4 2027-28',
     chart_yearly:'Year-by-Year Spend Profile', chart_all_districts:'All Districts',
-    tl_y1:'Year 1 (25-26)', tl_y2:'Year 2 (26-27)',
+    tl_y1:'Year 1 (25-26)', tl_y2:'Year 2 (26-27)', tl_y3:'Year 3 (27-28)',
     contacts_title:'District Contacts', contacts_sub:'Project leads, alternates, and fiscal reporters',
         nav_spenddown:'Spend-Down Monitor',
   },
+  es: {
     nav_overview:'Resumen', nav_funds:'Asignaciones', nav_districts:'Distritos',
     nav_outcomes:'Resultados', nav_budget:'Presupuesto', nav_timeline:'Cronograma', nav_contacts:'Contactos',
         nav_spenddown:'Spend-Down Monitor',
@@ -2108,9 +2115,9 @@ const translations = {
     filter_by:'Filtrar por:', filter_all:'Todos', filter_tier1:'Nivel 1', filter_tier2:'Nivel 2', filter_lift:'Alianza LIFT',
     outcomes_title:'Resultados del Programa', outcomes_sub:'Entregables medibles de la propuesta de cada distrito',
     budget_title:'Desglose Presupuestario', budget_sub:'Gastos por código de objeto en el portafolio de subvenciones',
-    timeline_title:'Cronograma de Implementación', timeline_sub:'Distribución presupuestaria a 3 años · Jan 2026 → Jun 2028',
+    timeline_title:'Cronograma de Implementación', timeline_sub:'Distribución presupuestaria a 3 años · Q3 2025-26 → Q4 2027-28',
     chart_yearly:'Perfil de Gasto Año por Año', chart_all_districts:'Todos los Distritos',
-    tl_y1:'Año 1 (25-26)', tl_y2:'Año 2 (26-27)',
+    tl_y1:'Año 1 (25-26)', tl_y2:'Año 2 (26-27)', tl_y3:'Año 3 (27-28)',
     contacts_title:'Contactos de Distrito', contacts_sub:'Líderes de proyecto, alternos y reporteros fiscales',
   },
   vi: {
@@ -2145,7 +2152,7 @@ const translations = {
     budget_title:'Chi tiết ngân sách', budget_sub:'Chi phí theo mã đối tượng',
     timeline_title:'Lịch trình thực hiện', timeline_sub:'Phân phối ngân sách 3 năm',
     chart_yearly:'Hồ sơ chi tiêu hàng năm', chart_all_districts:'Tất cả quận',
-    tl_y1:'Năm 1 (25-26)', tl_y2:'Năm 2 (26-27)',
+    tl_y1:'Năm 1 (25-26)', tl_y2:'Năm 2 (26-27)', tl_y3:'Năm 3 (27-28)',
     contacts_title:'Liên hệ quận', contacts_sub:'Trưởng dự án, người thay thế và báo cáo tài chính',
   },
   ar: {
@@ -2180,7 +2187,7 @@ const translations = {
     budget_title:'تفصيل الميزانية', budget_sub:'النفقات حسب كود الموضوع',
     timeline_title:'الجدول الزمني للتنفيذ', timeline_sub:'توزيع الميزانية لـ3 سنوات',
     chart_yearly:'ملف الإنفاق السنوي', chart_all_districts:'جميع المقاطعات',
-    tl_y1:'السنة 1 (25-26)', tl_y2:'السنة 2 (26-27)',
+    tl_y1:'السنة 1 (25-26)', tl_y2:'السنة 2 (26-27)', tl_y3:'السنة 3 (27-28)',
     contacts_title:'جهات اتصال المقاطعة', contacts_sub:'قادة المشروع والبدلاء ومراسلو الميزانية',
   },
   tl: {
@@ -2215,7 +2222,7 @@ const translations = {
     budget_title:'Breakdown ng Badyet', budget_sub:'Mga gastusin sa object-code',
     timeline_title:'Iskedyul ng Pagpapatupad', timeline_sub:'3-taong pamamahagi ng badyet',
     chart_yearly:'Profile ng Paggastos Taon-taon', chart_all_districts:'Lahat ng Distrito',
-    tl_y1:'Taon 1 (25-26)', tl_y2:'Taon 2 (26-27)',
+    tl_y1:'Taon 1 (25-26)', tl_y2:'Taon 2 (26-27)', tl_y3:'Taon 3 (27-28)',
     contacts_title:'Mga Kontak ng Distrito', contacts_sub:'Mga lider ng proyekto, kapalit, at mga fiscal reporter',
   }
 };
@@ -2479,9 +2486,9 @@ function renderBudget() {
 function renderTimeline() {
   const container = document.getElementById('timeline-rows');
   if (!container) return;
-  const maxTotal = Math.max(...districts.map(d => d.yearlyBudget.y1 + d.yearlyBudget.y2));
+  const maxTotal = Math.max(...districts.map(d => d.yearlyBudget.y1 + d.yearlyBudget.y2 + d.yearlyBudget.y3));
   container.innerHTML = districts.map(d => {
-    const total = d.yearlyBudget.y1 + d.yearlyBudget.y2;
+    const total = d.yearlyBudget.y1 + d.yearlyBudget.y2 + d.yearlyBudget.y3;
     const pct = v => ((v / d.funding) * 100).toFixed(0);
     return `
       <div class="timeline-row">
@@ -2494,7 +2501,13 @@ function renderTimeline() {
           <div class="timeline-bar-wrap">
             <div class="timeline-bar-inner timeline-bar-bg"><div class="timeline-bar-fill y2" style="width:${pct(d.yearlyBudget.y2)}%"></div></div>
             <div class="timeline-bar-label">${fmt(d.yearlyBudget.y2)}</div>
-          </div>        <div class="timeline-total">${fmt(total)}</div>
+          </div>
+          <div class="timeline-bar-wrap">
+            <div class="timeline-bar-inner timeline-bar-bg"><div class="timeline-bar-fill y3" style="width:${pct(d.yearlyBudget.y3)}%"></div></div>
+            <div class="timeline-bar-label">${fmt(d.yearlyBudget.y3)}</div>
+          </div>
+        </div>
+        <div class="timeline-total">${fmt(total)}</div>
       </div>`;
   }).join('');
 }
@@ -2656,9 +2669,12 @@ function initCharts() {
       labels: districts.map(d => d.shortName),
       datasets: [
         { label: 'Year 1', data: districts.map(d => d.yearlyBudget.y1), backgroundColor: C.lightBlue, borderRadius: 4, borderSkipped: false },
-        { label: 'Year 2', data: districts.map(d => d.yearlyBudget.y2), backgroundColor: C.darkBlue, borderRadius: 4, borderSkipped: false },      ]
+        { label: 'Year 2', data: districts.map(d => d.yearlyBudget.y2), backgroundColor: C.darkBlue, borderRadius: 4, borderSkipped: false },
+        { label: 'Year 3', data: districts.map(d => d.yearlyBudget.y3), backgroundColor: C.darkGold, borderRadius: 4, borderSkipped: false }
+      ]
     },
     options: { ...baseOpts,
+      plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': $' + ctx.raw.toLocaleString() } } },
       scales: {
         x: { grid: { display: false }, ticks: { color: C.tick, font: { size: 11 } }, border: { color: 'transparent' } },
         y: { grid: { color: C.grid }, ticks: { color: C.tick, callback: v => '$' + (v/1000) + 'K' }, border: { color: 'transparent' } }
@@ -2703,14 +2719,21 @@ function renderSpendDown() {
       const totalGrant = districts.reduce((a,d)=>a+d.funding,0);
       const totalY1 = districts.reduce((a,d)=>a+d.yearlyBudget.y1,0);
       const totalY2 = districts.reduce((a,d)=>a+d.yearlyBudget.y2,0);
+      const totalY3 = districts.reduce((a,d)=>a+d.yearlyBudget.y3,0);
+
       // KPI Row
-      const kpiRow = document.getElementById('spend-kpi-row');          <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label">Total Grant</div><div class="kpi-value blue">${fmt(totalGrant)}</div><div class="kpi-sub">All 11 districts</div></div>
+      const kpiRow = document.getElementById('spend-kpi-row');
+      if (kpiRow) { kpiRow.innerHTML = `
+          <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label">Total Grant</div><div class="kpi-value blue">${fmt(totalGrant)}</div><div class="kpi-sub">All 11 districts</div></div>
               <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label">Year 1 Budget</div><div class="kpi-value medium-blue">${fmt(totalY1)}</div><div class="kpi-sub">${((totalY1/totalGrant)*100).toFixed(1)}% of total grant</div></div>
                   <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label">Year 2 Budget</div><div class="kpi-value gold">${fmt(totalY2)}</div><div class="kpi-sub">${((totalY2/totalGrant)*100).toFixed(1)}% of total grant</div></div>
-                      
+                      <div class="kpi-card"><div class="kpi-accent-bar grey"></div><div class="kpi-label">Year 3 Budget</div><div class="kpi-value grey">${fmt(totalY3)}</div><div class="kpi-sub">${((totalY3/totalGrant)*100).toFixed(1)}% of total grant</div></div>
                         `; }
 
-      // Underspend detection: flag districts where Y1 < 15% of total (slow start)            const y1Pct = (d.yearlyBudget.y1 / d.funding) * 100;
+      // Underspend detection: flag districts where Y1 < 15% of total (slow start)
+      const underspendDistricts = districts.filter(d => {
+            const y1Pct = (d.yearlyBudget.y1 / d.funding) * 100;
+            const y2Pct = (d.yearlyBudget.y2 / d.funding) * 100;
             // Flag: Y1 < 15% is a slow start; Y2 < 40% cumulative is concerning
             return false;
           });
@@ -2763,6 +2786,7 @@ function renderSpendDown() {
                         <td class="amount">${fmt(d.funding)}</td>
                               <td class="amount">${fmt(d.yearlyBudget.y1)} <span style="font-size:11px;color:var(--text-muted)">(${y1P}%)</span></td>
                                     <td class="amount">${fmt(d.yearlyBudget.y2)}</td>
+                                          <td class="amount">${fmt(d.yearlyBudget.y3)}</td>
                                                 <td><div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${y1P}%;background:${isOffTrack?'#c53030':'var(--ccc-medium-blue)'}"></div></div><span style="font-size:11px">${y1P}%</span></td>
                                                       <td><span style="font-size:12px;font-weight:600;color:${isOffTrack?'#D18A00':'var(--ccc-medium-blue)'}">${pace}</span></td>
                                                             <td><button onclick="toggleDistrictStatus(this,'${d.id}')" data-on="${isOffTrack?'0':'1'}" style="background:${statusColor};color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;">${statusText}</button></td>
