@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -1529,7 +1529,7 @@
                   <th data-i18n="th_district">District</th>
                   <th data-i18n="th_tier">Tier</th>
                   <th data-i18n="th_funding">Funding</th>
-                  <th data-i18n="th_indirect">Indirect</th>
+                  <th data-i18n="th_indirect">CCCCO DISBURSED</th>
                   <th data-i18n="th_focus">Primary Focus</th>
                   <th>LIFT</th>
                 </tr>
@@ -1570,7 +1570,7 @@
           </div>
           <div class="kpi-card">
             <div class="kpi-accent-bar grey"></div>
-            <div class="kpi-label" data-i18n="kpi_indirect_total">Total Indirect</div>
+            <div class="kpi-label" data-i18n="kpi_indirect_total">Total CCCCO DISBURSED</div>
             <div class="kpi-value grey">~$53K</div>
             <div class="kpi-sub" data-i18n="kpi_indirect_sub">Avg 4.8% of direct costs</div>
           </div>
@@ -1594,7 +1594,7 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <div class="chart-title" data-i18n="chart_indirect">Indirect Cost Rates</div>
+              <div class="chart-title" data-i18n="chart_indirect">CCCCO DISBURSED Cost Rates</div>
               <div class="chart-label" data-i18n="chart_pct">By District %</div>
             </div>
             <div class="chart-wrap"><canvas id="indirectChart"></canvas></div>
@@ -1829,7 +1829,7 @@ const districts = [
     contact: { name: 'LeeAnne McNulty', role: 'Project Lead', email: 'leeanne.mcnulty@hancockcollege.edu' },
     altContact: { name: 'Craig Bach Ph.D.', role: 'Project Lead', email: 'craig.bach@hancockcollege.edu' },
     fiscalReporter: { name: 'Laura Becker', role: 'Fiscal Reporter', email: 'laura.becker@hancockcollege.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 46080, 'Employee Benefits (3000)': 9999, 'Supplies & Materials (4000)': 1159, 'Other Operating & Services (5000)': 38000, 'Indirect Costs (7000)': 4762 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 46080, 'Employee Benefits (3000)': 9999, 'Supplies & Materials (4000)': 1159, 'Other Operating & Services (5000)': 38000, 'CCCCO DISBURSED Costs (7000)': 4762 },
     yearlyBudget: { y1: 14055, y2: 44053, y3: 41892 }, primaryFocus: 'Hiring Equity & Mentorship'
   },
   {
@@ -1869,7 +1869,7 @@ const districts = [
     contact: { name: 'My Chau', role: 'Project Lead', email: 'mchau@citruscollege.edu' },
     altContact: { name: 'Greg Schulz Ed.D.', role: 'Plan Approver', email: 'gschulz@citruscollege.edu' },
     fiscalReporter: { name: 'Claudette Dain', role: 'Fiscal Reporter', email: 'cdain@citruscollege.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 18000, 'Employee Benefits (3000)': 1060, 'Other Operating & Services (5000)': 74940, 'Indirect (7000)': 5000 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 18000, 'Employee Benefits (3000)': 1060, 'Other Operating & Services (5000)': 74940, 'CCCCO DISBURSED (7000)': 5000 },
     yearlyBudget: { y1: 15000, y2: 40500, y3: 44500 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
@@ -1890,7 +1890,7 @@ const districts = [
     contact: { name: 'Bobby Becka', role: 'Project Lead', email: 'bobby.becka@kccd.edu' },
     altContact: { name: 'Rachel Tatro-Duarte', role: 'Project Lead', email: 'rachel.tatroduarte@portervillecollege.edu' },
     fiscalReporter: { name: 'Cathi Jacob', role: 'Fiscal Reporter', email: 'cjacob@kccd.edu' },
-    budgetHighlights: { 'Certificated Salaries (1000)': 32660, 'Employee Benefits (3000)': 7074, 'Supplies & Equipment (4000)': 90750, 'Services (5000)': 12020, 'Indirect (7000)': 7496 },
+    budgetHighlights: { 'Certificated Salaries (1000)': 32660, 'Employee Benefits (3000)': 7074, 'Supplies & Equipment (4000)': 90750, 'Services (5000)': 12020, 'CCCCO DISBURSED (7000)': 7496 },
     yearlyBudget: { y1: 50735, y2: 71503, y3: 27762 }, primaryFocus: 'VR Faculty Development'
   },
   {
@@ -1911,7 +1911,7 @@ const districts = [
     contact: { name: 'Adrienne Price', role: 'Project Lead', email: 'aprice@mtsac.edu' },
     altContact: null,
     fiscalReporter: { name: 'Delana Miller', role: 'Fiscal Reporter', email: 'dmiller102@mtsac.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 12000, 'Non-Instructional Salaries (2000)': 67925, 'Employee Benefits (3000)': 6576, 'Supplies & Materials (4000)': 14857, 'Other Operating & Services (5000)': 41500, 'Indirect (7000)': 7142 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 12000, 'Non-Instructional Salaries (2000)': 67925, 'Employee Benefits (3000)': 6576, 'Supplies & Materials (4000)': 14857, 'Other Operating & Services (5000)': 41500, 'CCCCO DISBURSED (7000)': 7142 },
     yearlyBudget: { y1: 38000, y2: 64000, y3: 48000 }, primaryFocus: 'Mentorship & Restorative Justice'
   },
   {
@@ -1932,7 +1932,7 @@ const districts = [
     contact: { name: 'Lisa King GPC', role: 'Project Lead', email: 'lking@nocccd.edu' },
     altContact: { name: 'Mylene Daniels', role: 'Project Lead', email: 'mdaniels@nocccd.edu' },
     fiscalReporter: { name: 'Erika Almaraz', role: 'Fiscal Reporter', email: 'ealmaraz@nocccd.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 14127, 'Supplies & Materials (4000)': 8000, 'Consulting/Video Production (5000)': 100000, 'Student Compensation (5000)': 40000, 'Indirect (7000)': 7142 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 14127, 'Supplies & Materials (4000)': 8000, 'Consulting/Video Production (5000)': 100000, 'Student Compensation (5000)': 40000, 'CCCCO DISBURSED (7000)': 7142 },
     yearlyBudget: { y1: 22000, y2: 71000, y3: 57000 }, primaryFocus: 'Hiring Equity & Student Inclusion'
   },
   {
@@ -1952,7 +1952,7 @@ const districts = [
     contact: { name: 'Emily Kaplan', role: 'Project Lead', email: 'ekaplan@peralta.edu' },
     altContact: { name: 'Jamille Teer', role: 'Alternate Project Lead', email: 'jteer@peralta.edu' },
     fiscalReporter: { name: 'Emily Kaplan', role: 'Fiscal Reporter', email: 'ekaplan@peralta.edu' },
-    budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 29300, 'Indirect (7000)': 5000 },
+    budgetHighlights: { 'Non-Instructional Salaries (2000)': 57420, 'Employee Benefits (3000)': 8280, 'LIFT Services (5000)': 29300, 'CCCCO DISBURSED (7000)': 5000 },
     yearlyBudget: { y1: 25580, y2: 37210, y3: 37210 }, primaryFocus: 'LIFT Mentorship Platform'
   },
   {
@@ -1974,7 +1974,7 @@ const districts = [
     contact: { name: 'Jared Burns Dr.', role: 'Project Lead', email: 'jburns001@sdccd.edu' },
     altContact: { name: 'John Valencia', role: 'Alternate Project Lead', email: 'john@goodforothers.org' },
     fiscalReporter: { name: 'Dan Troy', role: 'Fiscal Reporter', email: 'dtroy@sdccd.edu' },
-    budgetHighlights: { 'Instructional Salaries (1000)': 24370, 'Non-Instructional Salaries (2000)': 38000, 'Supplies & Materials (4000)': 2605, 'Consultants & Focus Groups (5000)': 77880, 'Indirect (7000)': 7142 },
+    budgetHighlights: { 'Instructional Salaries (1000)': 24370, 'Non-Instructional Salaries (2000)': 38000, 'Supplies & Materials (4000)': 2605, 'Consultants & Focus Groups (5000)': 77880, 'CCCCO DISBURSED (7000)': 7142 },
     yearlyBudget: { y1: 30000, y2: 60000, y3: 59997 }, primaryFocus: 'Hiring Audit & Data Analytics'
   },
   {
@@ -1994,7 +1994,7 @@ const districts = [
     contact: { name: 'Tracy Beidleman', role: 'Project Lead', email: 'beidleman_tracy@smc.edu' },
     altContact: { name: 'Diana Pennington', role: 'Project Lead', email: 'pennington_diana@smc.edu' },
     fiscalReporter: { name: 'Ann Le', role: 'Fiscal Reporter', email: 'le_ann@smc.edu' },
-    budgetHighlights: { 'Faculty Stipends / Overtime': 40000, 'Professional Development Travel (5000)': 45000, 'ERG & Consultant Support (5000)': 57857, 'Indirect (7000)': 7143 },
+    budgetHighlights: { 'Faculty Stipends / Overtime': 40000, 'Professional Development Travel (5000)': 45000, 'ERG & Consultant Support (5000)': 57857, 'CCCCO DISBURSED (7000)': 7143 },
     yearlyBudget: { y1: 0, y2: 75000, y3: 75000 }, primaryFocus: 'Workforce Belonging & ERGs'
   },
   {
@@ -2016,7 +2016,7 @@ const districts = [
     contact: { name: 'Nickolas Trujillo', role: 'Project Lead', email: 'nickolas.trujillo@scccd.edu' },
     altContact: { name: 'Susan Soudchantho', role: 'Alternate Project Lead', email: 'susan.soudchantho@scccd.edu' },
     fiscalReporter: { name: 'David El Fattal', role: 'Fiscal Reporter', email: 'accounting@scccd.edu' },
-    budgetHighlights: { 'Faculty Coordinator 15% FTE (1000)': 25000, 'Intern & Mentor Stipends (1000)': 70000, 'Outreach & Recruitment (5000)': 20000, 'Program Marketing & Evaluation (5000)': 27857, 'Indirect (7000)': 7143 },
+    budgetHighlights: { 'Faculty Coordinator 15% FTE (1000)': 25000, 'Intern & Mentor Stipends (1000)': 70000, 'Outreach & Recruitment (5000)': 20000, 'Program Marketing & Evaluation (5000)': 27857, 'CCCCO DISBURSED (7000)': 7143 },
     yearlyBudget: { y1: 30000, y2: 60000, y3: 60000 }, primaryFocus: 'Faculty Pipeline (FIT Program)'
   },
   {
@@ -2065,14 +2065,14 @@ const translations = {
     chart_tier_dist:'Fund Allocation by Tier', chart_total_dist:'Total Distribution',
     chart_focus_areas:'Program Focus Areas', chart_by_type:'By Initiative Type',
     table_district_summary:'District Summary',
-    th_district:'District', th_tier:'Tier', th_funding:'Funding', th_indirect:'Indirect', th_focus:'Primary Focus', th_total:'Total',
+    th_district:'District', th_tier:'Tier', th_funding:'Funding', th_indirect:'CCCCO DISBURSED', th_focus:'Primary Focus', th_total:'Total',
     funds_title:'Fund Allocations', funds_sub:'Detailed breakdown of grant funding across all 11 districts',
     kpi_total_allocated:'Total Allocated', kpi_all_11:'All 11 districts',
     kpi_tier1_total:'Tier 1 Total', kpi_7dist:'7 districts',
     kpi_tier2_total:'Tier 2 Total', kpi_4dist:'4 districts × $100K',
-    kpi_indirect_total:'Total Indirect', kpi_indirect_sub:'Avg 4.8% of direct costs',
+    kpi_indirect_total:'Total CCCCO DISBURSED', kpi_indirect_sub:'Avg 4.8% of direct costs',
     chart_funding_district:'Funding by District', chart_direct:'Direct Allocation',
-    chart_tier_split:'Tier Split', chart_indirect:'Indirect Cost Rates', chart_pct:'By District %',
+    chart_tier_split:'Tier Split', chart_indirect:'CCCCO DISBURSED Cost Rates', chart_pct:'By District %',
     table_alloc_detail:'District-Level Allocation Detail',
     districts_title:'District Profiles', districts_sub:'All 11 participating community college districts',
     filter_by:'Filter by:', filter_all:'All Districts', filter_tier1:'Tier 1', filter_tier2:'Tier 2', filter_lift:'LIFT Alliance',
@@ -2368,7 +2368,7 @@ function renderDistrictCards(filter) {
         <div class="district-card-stats">
           <div class="district-stat"><label>Tier</label><span>${d.tier}</span></div>
           <div class="district-stat"><label>Funding</label><span>${fmt(d.funding)}</span></div>
-          <div class="district-stat"><label>Indirect</label><span>${d.indirectPct}</span></div>
+          <div class="district-stat"><label>CCCCO DISBURSED</label><span>${d.indirectPct}</span></div>
         </div>
         <div class="district-card-focus">
           ${d.focus.map(f => '<span class="focus-tag">' + f + '</span>').join('')}
@@ -2402,8 +2402,8 @@ function renderAllocationTable() {
         <th>Tier</th>
         <th>Direct Funding</th>
         <th>% of Total</th>
-        <th>Indirect</th>
-        <th>Indirect Rate</th>
+        <th>CCCCO DISBURSED</th>
+        <th>CCCCO DISBURSED Rate</th>
         <th>LIFT</th>
       </tr>
     </thead>
@@ -2618,7 +2618,7 @@ function initCharts() {
       datasets: [
         { label: 'Direct Funding', data: districts.map(d => d.funding - d.indirectFunds),
           backgroundColor: districts.map(d => d.tier === 1 ? C.darkBlue : C.medBlue), borderRadius: 6, borderSkipped: false },
-        { label: 'Indirect Costs', data: districts.map(d => d.indirectFunds),
+        { label: 'CCCCO DISBURSED Costs', data: districts.map(d => d.indirectFunds),
           backgroundColor: C.gold, borderRadius: 6, borderSkipped: false }
       ]
     },
@@ -2642,13 +2642,13 @@ function initCharts() {
     options: { ...baseOpts, plugins: { ...baseOpts.plugins, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': $' + ctx.raw.toLocaleString() } } } }
   });
 
-  // 5. INDIRECT BAR
+  // 5. CCCCO DISBURSED BAR
   const ic = document.getElementById('indirectChart');
   if (ic) chartInstances.indirect = new Chart(ic, {
     type: 'bar',
     data: {
       labels: districts.map(d => d.shortName),
-      datasets: [{ label: 'Indirect Rate', data: districts.map(d => parseFloat(d.indirectPct)),
+      datasets: [{ label: 'CCCCO DISBURSED Rate', data: districts.map(d => parseFloat(d.indirectPct)),
         backgroundColor: districts.map(d => d.indirectFunds === 0 ? C.lightBlue : C.darkGold),
         borderRadius: 4, borderSkipped: false }]
     },
