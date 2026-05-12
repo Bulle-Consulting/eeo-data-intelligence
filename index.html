@@ -666,7 +666,7 @@
             <span id="underspend-count" class="risk-badge high" data-i18n="calculating">Calculating...</span>
           </div>
           <div class="card-body">
-            <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;" data-i18n="underspend_desc">Districts get flagged when their Spend Pace is set to Slow, Fast, or Underfunded. Set the pace to Moderate in the table below to clear the flag.</p>
+            <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.5;" data-i18n="underspend_desc">Districts get flagged when their Spend Pace is set to Slow or Fast. Set the pace to Moderate in the table below to clear the flag.</p>
             <div id="underspend-chart-wrap" style="position:relative;height:240px;margin-bottom:14px;display:none;">
               <canvas id="underspendChart"></canvas>
             </div>
@@ -992,7 +992,7 @@ const translations = {
     spend_sub:'Track grant expenditures across the 2-year funding cycle and flag districts at risk of underspending',
     underspend_title:'⚠ Underspend Risk Alerts',
     calculating:'Calculating...',
-    underspend_desc:'Districts get flagged when their Spend Pace is set to Slow, Fast, or Underfunded. Set the pace to Moderate in the table below to clear the flag.',
+    underspend_desc:'Districts get flagged when their Spend Pace is set to Slow or Fast. Set the pace to Moderate in the table below to clear the flag.',
     spend_table_title:'District Spend-Down Detail',
     spend_table_sub:'Allocations vs. Year-by-Year Spend · 2-Year Cycle',
     th_total_grant:'Total Grant',
@@ -1010,7 +1010,6 @@ const translations = {
     pace_slow:'Slow',
     pace_moderate:'Moderate',
     pace_fast:'Fast',
-    pace_underfunded:'Underfunded',
     status_on:'On Track',
     status_off:'Off Track',
     th_direct_funding:'Total Funding',
@@ -1093,7 +1092,6 @@ const translations = {
     pace_slow:'Lento',
     pace_moderate:'Moderado',
     pace_fast:'Rápido',
-    pace_underfunded:'Subfinanciado',
     status_on:'En Camino',
     status_off:'Desviado',
     th_direct_funding:'Financiamiento Total',
@@ -1176,7 +1174,6 @@ const translations = {
     pace_slow:'Chậm',
     pace_moderate:'Vừa phải',
     pace_fast:'Nhanh',
-    pace_underfunded:'Thiếu vốn',
     status_on:'Đúng Tiến độ',
     status_off:'Chệch Hướng',
     th_direct_funding:'Tổng Tài trợ',
@@ -1259,7 +1256,6 @@ const translations = {
     pace_slow:'بطيء',
     pace_moderate:'معتدل',
     pace_fast:'سريع',
-    pace_underfunded:'ناقص التمويل',
     status_on:'على المسار',
     status_off:'خارج المسار',
     th_direct_funding:'إجمالي التمويل',
@@ -1324,7 +1320,7 @@ const translations = {
     spend_sub:'Subaybayan ang gastos ng grant sa loob ng 2-taong funding cycle at i-flag ang mga distritong nasa panganib ng underspending',
     underspend_title:'⚠ Underspend Risk Alerts',
     calculating:'Kinakalkula...',
-    underspend_desc:'Naka-flag ang mga distrito kapag ang Spend Pace ay nakatakda sa Slow, Fast, o Underfunded. Itakda sa Moderate sa table upang alisin ang flag.',
+    underspend_desc:'Naka-flag ang mga distrito kapag ang Spend Pace ay nakatakda sa Slow o Fast. Itakda sa Moderate sa table upang alisin ang flag.',
     spend_table_title:'Detalye ng Spend-Down ng Distrito',
     spend_table_sub:'Mga Paglalaan vs. Taon-taong Gastos · 2-Year Cycle',
     th_total_grant:'Kabuuang Grant',
@@ -1342,7 +1338,6 @@ const translations = {
     pace_slow:'Mabagal',
     pace_moderate:'Katamtaman',
     pace_fast:'Mabilis',
-    pace_underfunded:'Kulang sa Pondo',
     status_on:'On Track',
     status_off:'Off Track',
     th_direct_funding:'Kabuuang Pondo',
@@ -1423,7 +1418,7 @@ const translations = {
     kpi_all_11_districts:'全部 11 個學區',
     kpi_y1_window:'佔補助金 · 2026 年 1 月 – 2027 年 6 月',
     kpi_y2_window:'佔補助金 · 2027 年 7 月 – 2028 年 6 月',
-    pace_slow:'緩慢', pace_moderate:'中等', pace_fast:'快速', pace_underfunded:'資金不足',
+    pace_slow:'緩慢', pace_moderate:'中等', pace_fast:'快速',
     status_on:'進度正常', status_off:'進度落後',
     th_direct_funding:'總資金',
     th_pct_total:'佔總額 %',
@@ -1683,8 +1678,7 @@ const ROLE_KEYS = {
   'Project Lead': 'role_project_lead',
   'Alternate Project Lead': 'role_alt_project_lead',
   'Plan Approver': 'role_plan_approver',
-  'Fiscal Reporter': 'role_fiscal_reporter',
-};
+  'Fiscal Reporter': 'role_fiscal_reporter'};
 function translateRole(r) { return ROLE_KEYS[r] ? t(ROLE_KEYS[r]) : r; }
 
 function renderContacts() {
@@ -1819,15 +1813,14 @@ function toggleDistrictStatus(btn, id) {
   renderUnderspendChart();
 }
 
-// Spend-pace cycle: Slow (yellow) → Moderate (green) → Fast (red) → Underfunded (orange) → Slow ...
-const PACE_CYCLE = ['slow','moderate','fast','underfunded'];
+// Spend-pace cycle: Slow (yellow) → Moderate (green) → Fast (red) → Slow ...
+const PACE_CYCLE = ['slow','moderate','fast'];
 const PACE_COLOR = {
   slow:        '#E0B500',  // yellow (CCCCO gold-leaning)
   moderate:    '#1a7a3c',  // green  (success)
   fast:        '#c53030',  // red
-  underfunded: '#D18A00'   // orange (CCCCO dark gold)
 };
-const PACE_LABEL = { slow:'Slow', moderate:'Moderate', fast:'Fast', underfunded:'Underfunded' };
+const PACE_LABEL = { slow:'Slow', moderate:'Moderate', fast:'Fast' };
 
 function toggleDistrictPace(btn, id) {
   const current = btn.dataset.pace || 'moderate';
@@ -1964,7 +1957,7 @@ function renderSpendDown() {
       const statusText = isOffTrack ? t('status_off') : t('status_on');
       // Disbursed % of total — 0% across the board because disbursement hasn't started
       const disbursedPct = d.funding === 0 ? 0 : (d.cccoDisbursed / d.funding) * 100;
-      // Spend pace — defaults to "Moderate"; click cycles Slow → Moderate → Fast → Underfunded
+      // Spend pace — defaults to "Moderate"; click cycles Slow → Moderate → Fast
       const pace = PACE_CYCLE.includes(districtPaces[d.id]) ? districtPaces[d.id] : 'moderate';
       const paceColor = PACE_COLOR[pace];
       const paceText  = t('pace_' + pace);
