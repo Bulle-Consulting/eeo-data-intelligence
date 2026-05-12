@@ -397,6 +397,35 @@
     .translation-active-bar strong { color:var(--ccc-medium-blue); }
     .translation-dismiss { margin-left:auto; font-size:11px; color:var(--text-muted); cursor:pointer; padding:2px 6px; border-radius:4px; transition:background var(--transition); }
     .translation-dismiss:hover { background:var(--border); }
+
+    /* Per-district Implementation Timeline */
+    .impl-timeline { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 22px 22px; overflow-x:auto; }
+    .impl-axis-quarters { display:grid; grid-template-columns:220px repeat(10, 1fr); gap:2px; padding:4px 0 10px; border-bottom:1px solid var(--border); font-size:10px; font-weight:700; letter-spacing:0.05em; color:var(--text-secondary); text-transform:uppercase; }
+    .impl-axis-quarters .impl-q { text-align:center; }
+    .impl-row { display:grid; grid-template-columns:220px 1fr; align-items:center; gap:0; padding:12px 0; border-bottom:1px solid var(--border); }
+    .impl-row:last-child { border-bottom:none; }
+    .impl-label { font-size:13px; font-weight:600; color:var(--text-primary); padding-right:14px; line-height:1.3; }
+    .impl-label small { display:block; font-size:11px; font-weight:500; color:var(--text-muted); margin-top:2px; }
+    .impl-bars { position:relative; height:32px; }
+    .impl-bar { position:absolute; height:24px; top:4px; border-radius:6px; padding:0 10px; display:flex; align-items:center; font-size:11px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:0 1px 2px rgba(15,23,42,0.10); }
+    .impl-bar.t1-a { background:var(--ccc-dark-blue); }
+    .impl-bar.t1-b { background:var(--ccc-medium-blue); }
+    .impl-bar.t1-c { background:#3F7BBF; }
+    .impl-bar.t1-d { background:#5A91CD; }
+    .impl-bar.t2-a { background:#D18A00; }
+    .impl-bar.t2-b { background:#E2A622; }
+    .impl-bar.t2-c { background:#F0BD4F; color:#5A3A00; }
+    .impl-bar.t2-d { background:#FFD37A; color:#5A3A00; }
+    .impl-row.hidden { display:none; }
+    .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+    @media (max-width:760px) {
+      .impl-timeline { padding:14px 12px 16px; }
+      .impl-axis-quarters, .impl-row { grid-template-columns:130px 1fr; }
+      .impl-axis-quarters { font-size:9px; }
+      .impl-label { font-size:12px; padding-right:8px; }
+      .impl-label small { font-size:10.5px; }
+      .impl-bar { font-size:10px; padding:0 6px; }
+    }
   </style>
 </head>
 <body>
@@ -442,12 +471,12 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Budget Breakdown
     </button>
-
-    <div class="sidebar-section-label" data-i18n="sb_program">Program</div>
     <button class="nav-item" onclick="showSection('timeline',this)" data-i18n="nav_timeline">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Timeline
     </button>
+
+    <div class="sidebar-section-label" data-i18n="sb_program">Program</div>
     <button class="nav-item" onclick="showSection('contacts',this)" data-i18n="nav_contacts">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Contacts
@@ -613,7 +642,6 @@
           <button class="filter-btn active" data-filter="all" onclick="filterDistricts('all',this)" data-i18n="filter_all">All Districts</button>
           <button class="filter-btn" data-filter="tier1" onclick="filterDistricts('tier1',this)" data-i18n="filter_tier1">Tier 1</button>
           <button class="filter-btn" data-filter="tier2" onclick="filterDistricts('tier2',this)" data-i18n="filter_tier2">Tier 2</button>
-          <button class="filter-btn" data-filter="lift" onclick="filterDistricts('lift',this)" data-i18n="filter_lift">LIFT Alliance</button>
         </div>
         <div class="district-grid" id="district-grid"></div>
       </div>
@@ -632,21 +660,24 @@
 
       <!-- TIMELINE -->
       <div id="section-timeline" class="section">
-        <div class="page-header"><h2 data-i18n="timeline_title">Implementation Timeline</h2><p data-i18n="timeline_sub">2-year funding cycle · Jan 1, 2026 → Jun 30, 2028</p></div>
-        <div class="chart-card-full">
-          <div class="chart-header"><div class="chart-title" data-i18n="chart_yearly">Year-by-Year Spend Profile</div><div class="chart-label" data-i18n="chart_all_districts">All Districts</div></div>
-          <div class="chart-wrap-tall"><canvas id="yearlyChart"></canvas></div>
+        <div class="page-header">
+          <h2><span data-i18n="timeline_title">Implementation Timeline</span> <span style="color:var(--text-muted);font-weight:500;">·</span> <span style="color:var(--text-secondary);font-weight:500;">Jan 1, 2026 → Jun 30, 2028</span></h2>
+          <p data-i18n="timeline_sub">Per-district implementation phases across the 30-month funding cycle.</p>
         </div>
-        <div class="timeline-card">
-          <div class="timeline-header-row">
-            <div class="tl-hl" data-i18n="th_district">District</div>
-            <div class="tl-hb">
-              <div class="tl-hbi" data-i18n="tl_y1">Year 1 (Jan 2026 – Jun 2027)</div>
-              <div class="tl-hbi" data-i18n="tl_y2">Year 2 (Jul 2027 – Jun 2028)</div>
-            </div>
-            <div class="tl-ht" data-i18n="th_total">Total</div>
+        <div class="filter-row" style="margin-bottom:18px;">
+          <span class="filter-label" data-i18n="filter_by">Filter by:</span>
+          <button class="filter-btn active" data-tlfilter="all" onclick="filterTimeline('all',this)" data-i18n="filter_all">All Districts</button>
+          <button class="filter-btn" data-tlfilter="tier1" onclick="filterTimeline('tier1',this)" data-i18n="filter_tier1">Tier 1</button>
+          <button class="filter-btn" data-tlfilter="tier2" onclick="filterTimeline('tier2',this)" data-i18n="filter_tier2">Tier 2</button>
+        </div>
+        <div class="impl-timeline">
+          <div class="impl-axis impl-axis-quarters">
+            <div></div>
+            <div class="impl-q">2026 Q1</div><div class="impl-q">Q2</div><div class="impl-q">Q3</div><div class="impl-q">Q4</div>
+            <div class="impl-q">2027 Q1</div><div class="impl-q">Q2</div><div class="impl-q">Q3</div><div class="impl-q">Q4</div>
+            <div class="impl-q">2028 Q1</div><div class="impl-q">Q2</div>
           </div>
-          <div id="timeline-rows"></div>
+          <div id="impl-rows"></div>
         </div>
       </div>
 
@@ -745,7 +776,7 @@ const districts = [
     fiscalReporter:{name:'Laura Becker',role:'Fiscal Reporter',email:'laura.becker@hancockcollege.edu',phone:'(805) 922-6966'},
     budgetHighlights:{'Instructional Salaries (1000)':46080,'Employee Benefits (3000)':9999,'Supplies & Materials (4000)':1159,'Other Operating & Services (5000)':38000,'Indirect (7000)':4762},
     yearlyBudget:{y1:58108,y2:41892},
-    primaryFocus:'Hiring Equity & Mentorship'
+    primaryFocus:'Hiring Equity & Mentorship', phases:[{label:'Framework design (DRS)',startQ:1,span:2,shade:'a'},{label:'DRS training + handbook',startQ:3,span:3,shade:'b'},{label:'Equity-faculty mentor cohort',startQ:4,span:4,shade:'c'},{label:'Evaluation & sustainability',startQ:8,span:3,shade:'d'}]
   },
   {
     id:'avc', name:'Antelope Valley CCD', shortName:'Antelope Valley',
@@ -766,7 +797,7 @@ const districts = [
     planApprover:{name:'Dr. Jennifer Zellet',role:'Plan Approver',email:'jennifer.zellet@avc.edu',phone:'(661) 722-6300'},
     budgetHighlights:{'Instructional Salaries (1000)':9000,'Non-Instructional Salaries (2000)':34085,'Other Operating & Services (5000)':56915},
     yearlyBudget:{y1:40085,y2:59915},
-    primaryFocus:'LIFT Mentorship Platform'
+    primaryFocus:'LIFT Mentorship Platform', phases:[{label:'LIFT platform onboarding',startQ:1,span:2,shade:'a'},{label:'Mentor/mentee pilot',startQ:2,span:4,shade:'b'},{label:'Regional meet-ups + expansion',startQ:5,span:4,shade:'c'},{label:'Impact study & scaling',startQ:8,span:3,shade:'d'}]
   },
   {
     id:'citrus', name:'Citrus CCD', shortName:'Citrus CCD',
@@ -786,7 +817,7 @@ const districts = [
     fiscalReporter:{name:'Claudette Dain',role:'Fiscal Reporter',email:'cdain@citruscollege.edu',phone:'(626) 914-8886'},
     budgetHighlights:{'Non-Instructional Salaries (2000)':18000,'Employee Benefits (3000)':1060,'Other Operating & Services (5000)':75940,'Indirect (7000)':5000},
     yearlyBudget:{y1:55500,y2:44500},
-    primaryFocus:'LIFT Mentorship Platform'
+    primaryFocus:'LIFT Mentorship Platform', phases:[{label:'Platform setup + curriculum',startQ:1,span:2,shade:'a'},{label:'Cohort 1 (admin + classified)',startQ:3,span:4,shade:'b'},{label:'Cohort 2 + meet-ups',startQ:6,span:3,shade:'c'},{label:'Evaluation & sustainability',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'kern', name:'Kern CCD', shortName:'Kern CCD',
@@ -808,7 +839,7 @@ const districts = [
     planApprover:{name:'Melissa Thornsberry',role:'Plan Approver',email:'melissa.thornsberry@kccd.edu',phone:'(661) 336-5142'},
     budgetHighlights:{'Certificated Salaries (1000)':32660,'Employee Benefits (3000)':7074,'Supplies & Equipment (4000)':90750,'Services (5000)':12020,'Indirect (7000)':7496},
     yearlyBudget:{y1:122238,y2:27762},
-    primaryFocus:'VR Faculty Development'
+    primaryFocus:'VR Faculty Development', phases:[{label:'VR procurement + intake',startQ:1,span:2,shade:'a'},{label:'Yr 1 VR training (6-session)',startQ:2,span:4,shade:'b'},{label:'Yr 2 cohort + Unity content',startQ:5,span:4,shade:'c'},{label:'Districtwide VR showcase',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'mtsac', name:'Mt. San Antonio CCD', shortName:'Mt. SAC',
@@ -829,7 +860,7 @@ const districts = [
     fiscalReporter:{name:'Delana Miller',role:'Fiscal Reporter',email:'dmiller102@mtsac.edu',phone:'(909) 836-8912'},
     budgetHighlights:{'Instructional Salaries (1000)':12000,'Non-Instructional Salaries (2000)':67925,'Employee Benefits (3000)':6576,'Supplies & Materials (4000)':14857,'Other Operating & Services (5000)':41500,'Indirect (7000)':7142},
     yearlyBudget:{y1:102000,y2:48000},
-    primaryFocus:'Mentorship & Restorative Justice'
+    primaryFocus:'Mentorship & Restorative Justice', phases:[{label:'NESP expansion (Qooper)',startQ:1,span:3,shade:'a'},{label:'RJ facilitator training',startQ:2,span:3,shade:'b'},{label:'Yr 2 mentor + RJ cohort',startQ:5,span:4,shade:'c'},{label:'Evaluation & recognition',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'nocccd', name:'North Orange County CCD', shortName:'North Orange',
@@ -850,7 +881,7 @@ const districts = [
     fiscalReporter:{name:'Erika Almaraz',role:'Fiscal Reporter',email:'ealmaraz@nocccd.edu',phone:'(714) 808-4866'},
     budgetHighlights:{'Non-Instructional Salaries (2000)':14127,'Supplies & Materials (4000)':8000,'Consulting/Video Production (5000)':100000,'Student Compensation (5000)':20731,'Indirect (7000)':7142},
     yearlyBudget:{y1:93000,y2:57000},
-    primaryFocus:'Hiring Equity & Student Inclusion'
+    primaryFocus:'Hiring Equity & Student Inclusion', phases:[{label:'EEO module production',startQ:1,span:3,shade:'a'},{label:'Pilot trainings + tracking',startQ:3,span:3,shade:'b'},{label:'Student Hiring Comm. program',startQ:5,span:5,shade:'c'},{label:'Impact reporting',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'peralta', name:'Peralta CCD', shortName:'Peralta CCD',
@@ -871,7 +902,7 @@ const districts = [
     planApprover:{name:'Sharon Buckner',role:'Plan Approver',email:'sbuckner@peralta.edu',phone:'(510) 466-7200'},
     budgetHighlights:{'Non-Instructional Salaries (2000)':57420,'Employee Benefits (3000)':8280,'LIFT Services (5000)':29300,'Indirect (7000)':5000},
     yearlyBudget:{y1:62790,y2:37210},
-    primaryFocus:'LIFT Mentorship Platform'
+    primaryFocus:'LIFT Mentorship Platform', phases:[{label:'LIFT platform deployment',startQ:1,span:2,shade:'a'},{label:'Yr 1 mentor pairing',startQ:2,span:4,shade:'b'},{label:'Yr 2 expansion + meet-ups',startQ:6,span:3,shade:'c'},{label:'Impact evaluation',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'sdccd', name:'San Diego CCD', shortName:'San Diego CCD',
@@ -893,7 +924,7 @@ const districts = [
     fiscalReporter:{name:'Dan Troy',role:'Fiscal Reporter',email:'dtroy@sdccd.edu',phone:'(619) 388-6976'},
     budgetHighlights:{'Instructional Salaries (1000)':24370,'Non-Instructional Salaries (2000)':38000,'Supplies & Materials (4000)':2605,'Consultants & Focus Groups (5000)':77880,'Indirect (7000)':7142},
     yearlyBudget:{y1:90000,y2:59997},
-    primaryFocus:'Hiring Audit & Data Analytics'
+    primaryFocus:'Hiring Audit & Data Analytics', phases:[{label:'TRACE workgroup convened',startQ:1,span:2,shade:'a'},{label:'Data analysis + focus groups',startQ:3,span:4,shade:'b'},{label:'White Paper + pilot protocols',startQ:6,span:3,shade:'c'},{label:'Board resolution + handoff',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'smc', name:'Santa Monica CCD', shortName:'Santa Monica',
@@ -914,7 +945,7 @@ const districts = [
     planApprover:{name:'Christopher Bonvenuto',role:'Plan Approver',email:'bonvenuto_chris@smc.edu',phone:'(310) 434-4508'},
     budgetHighlights:{'Faculty Stipends / Overtime (1000)':40000,'Professional Development Travel (5000)':45000,'ERG & Consultant Support (5000)':57857,'Indirect (7000)':7143},
     yearlyBudget:{y1:75000,y2:75000},
-    primaryFocus:'Workforce Belonging & ERGs'
+    primaryFocus:'Workforce Belonging & ERGs', phases:[{label:'PD workshops + ERG launch',startQ:1,span:4,shade:'a'},{label:'Conferences + mentor cycle',startQ:3,span:4,shade:'b'},{label:'Yr 2 ERGs + workshops',startQ:5,span:5,shade:'c'},{label:'Annual reporting',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'scccd', name:'State Center CCD', shortName:'State Center CCD',
@@ -936,7 +967,7 @@ const districts = [
     fiscalReporter:{name:'David El Fattal',role:'Fiscal Reporter',email:'accounting@scccd.edu',phone:'(559) 244-5901'},
     budgetHighlights:{'Faculty Coordinator 15% FTE (1000)':25000,'Intern & Mentor Stipends (1000)':70000,'Outreach & Recruitment (5000)':20000,'Program Marketing & Evaluation (5000)':27857,'Indirect (7000)':7143},
     yearlyBudget:{y1:90000,y2:60000},
-    primaryFocus:'Faculty Pipeline (FIT Program)'
+    primaryFocus:'Faculty Pipeline (FIT Program)', phases:[{label:'FIT outreach + recruitment',startQ:1,span:2,shade:'a'},{label:'Intern Cohort 1 (10 + mentors)',startQ:3,span:4,shade:'b'},{label:'Intern Cohort 2 + hiring data',startQ:6,span:4,shade:'c'},{label:'Sustainability plan',startQ:9,span:2,shade:'d'}]
   },
   {
     id:'wvm', name:'West Valley-Mission CCD', shortName:'West Valley-Mission',
@@ -957,7 +988,7 @@ const districts = [
     planApprover:{name:'Dr. Seher Awan',role:'Plan Approver',email:'Seher.Awan@missioncollege.edu',phone:'(323) 241-5273'},
     budgetHighlights:{'Non-Instructional Salaries (2000)':57420,'Employee Benefits (3000)':8280,'LIFT Services (5000)':34300},
     yearlyBudget:{y1:61500,y2:38500},
-    primaryFocus:'LIFT Mentorship Platform'
+    primaryFocus:'LIFT Mentorship Platform', phases:[{label:'LIFT platform deployment',startQ:1,span:2,shade:'a'},{label:'Mentor pairing + curriculum',startQ:2,span:4,shade:'b'},{label:'Yr 2 expansion + meet-ups',startQ:6,span:3,shade:'c'},{label:'Annual impact study',startQ:9,span:2,shade:'d'}]
   }
 ];
 
@@ -999,7 +1030,7 @@ const translations = {
     filter_by:'Filter by:', filter_all:'All Districts', filter_tier1:'Tier 1', filter_tier2:'Tier 2', filter_lift:'LIFT Alliance',
     outcomes_title:'Program Outcomes', outcomes_sub:"Measurable deliverables and targets from each district's proposal",
     budget_title:'Budget Breakdown', budget_sub:'Object-code expenditures split across Year 1 (Jan 2026 – Jun 2027) and Year 2 (Jul 2027 – Jun 2028). Indirect costs are folded into each year proportionally.',
-    timeline_title:'Implementation Timeline', timeline_sub:'2-year funding cycle · Jan 1, 2026 → Jun 30, 2028',
+    timeline_title:'Implementation Timeline', timeline_sub:'Per-district implementation phases across the 30-month funding cycle.',
     chart_yearly:'Year-by-Year Spend Profile', chart_all_districts:'All Districts',
     tl_y1:'Year 1 (Jan 2026 – Jun 2027)', tl_y2:'Year 2 (Jul 2027 – Jun 2028)',
     contacts_title:'District Contacts', contacts_sub:'Project leads, alternates, and fiscal reporters',
@@ -1685,23 +1716,36 @@ function renderBudget() {
   }).join('');
 }
 
-/* ════════════ TIMELINE — 2 years ════════════ */
+/* ════════════ IMPLEMENTATION TIMELINE — per district phases ════════════ */
 function renderTimeline() {
-  const container = document.getElementById('timeline-rows');
+  const container = document.getElementById('impl-rows');
   if (!container) return;
+  const tlPalette = { 1: ['t1-a','t1-b','t1-c','t1-d'], 2: ['t2-a','t2-b','t2-c','t2-d'] };
   container.innerHTML = districts.map(d => {
-    const total = d.yearlyBudget.y1 + d.yearlyBudget.y2;
-    const pct = v => ((v / d.funding) * 100).toFixed(0);
+    const palette = tlPalette[d.tier] || tlPalette[1];
+    const phases = (d.phases || []).map((p, i) => {
+      const left = ((p.startQ - 1) / 10) * 100;
+      const width = (p.span / 10) * 100;
+      const cls = palette[i % palette.length];
+      return `<div class="impl-bar ${cls}" style="left:${left}%;width:calc(${width}% - 4px);" title="${p.label}">${p.label}</div>`;
+    }).join('');
+    const tierLabel = d.tier === 1 ? 'Tier 1' : 'Tier 2';
     return `
-      <div class="timeline-row">
-        <div class="timeline-label">${d.shortName}<small>${fmt(d.funding)}</small></div>
-        <div class="timeline-bars">
-          <div class="timeline-bar-wrap"><div class="timeline-bar-inner timeline-bar-bg"><div class="timeline-bar-fill y1" style="width:${pct(d.yearlyBudget.y1)}%"></div></div><div class="timeline-bar-label">${fmt(d.yearlyBudget.y1)}</div></div>
-          <div class="timeline-bar-wrap"><div class="timeline-bar-inner timeline-bar-bg"><div class="timeline-bar-fill y2" style="width:${pct(d.yearlyBudget.y2)}%"></div></div><div class="timeline-bar-label">${fmt(d.yearlyBudget.y2)}</div></div>
-        </div>
-        <div class="timeline-total">${fmt(total)}</div>
+      <div class="impl-row" data-tier="tier${d.tier}">
+        <div class="impl-label">${d.shortName}<small>${tierLabel} · ${fmt(d.funding)}</small></div>
+        <div class="impl-bars">${phases}</div>
       </div>`;
   }).join('');
+}
+
+function filterTimeline(filter, btn) {
+  document.querySelectorAll('[data-tlfilter]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.impl-row').forEach(row => {
+    const tier = row.getAttribute('data-tier');
+    const show = filter === 'all' || tier === filter;
+    row.classList.toggle('hidden', !show);
+  });
 }
 
 /* ════════════ CONTACTS ════════════ */
