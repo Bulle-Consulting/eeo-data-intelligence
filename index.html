@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="no-referrer-when-downgrade" />
+  <meta name="color-scheme" content="light dark" />
   <title>EEO Data Intelligence | 2026-2028 IBP Grant Initiative</title>
   <meta name="description" content="Project management intelligence dashboard for the EEO Innovative Best Practices Grant Initiative — monitoring fund allocations, outcomes, and progress across 11 California Community College Districts." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2108,6 +2110,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = (e.state && e.state.section) || (window.location.hash || '').replace(/^#/, '').trim() || 'overview';
     if (document.getElementById('section-' + id)) showSection(id);
   });
+  // Parent-frame bridge: when this page is embedded in a host (e.g. a CRM
+  // dashboard panel) it still behaves like a standalone page, but it
+  // surfaces section changes to the parent and accepts navigation requests
+  // so the host's chrome (URL bar, breadcrumbs) can stay in sync.
+  function postSectionChange(id) {
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'dashboard:section', section: id }, '*');
+      }
+    } catch (e) { /* ignore */ }
+  }
+  // Wrap the existing showSection so every render notifies the parent
+  const _origShow = showSection;
+  window.showSection = function(id, btn, isMobile) {
+    _origShow(id, btn, isMobile);
+    postSectionChange(id);
+  };
+  // Accept navigation requests from the host frame
+  window.addEventListener('message', (ev) => {
+    try {
+      const m = ev && ev.data;
+      if (m && m.type === 'dashboard:navigate' && typeof m.section === 'string') {
+        if (document.getElementById('section-' + m.section)) showSection(m.section);
+      }
+    } catch (e) { /* ignore */ }
+  });
+  // Announce the initial section once the page settles
+  setTimeout(() => postSectionChange(resolveInitialSection()), 100);
 });
 </script>
 </body>
