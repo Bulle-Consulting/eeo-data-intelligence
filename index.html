@@ -339,6 +339,7 @@
     .contact-info { flex:1; min-width:0; }
     .contact-name { font-size:13px; font-weight:600; color:var(--text-primary); }
     .contact-role { font-size:11px; color:var(--text-muted); margin-bottom:2px; }
+    .contact-title { font-size:11px; color:var(--text-secondary); font-weight:500; line-height:1.35; margin:1px 0 2px; }
     .contact-email { font-size:11.5px; color:var(--ccc-medium-blue); word-break:break-all; }
     [data-theme="dark"] .contact-email { color:var(--accent-light); }
 
@@ -864,9 +865,10 @@ const districts = [
       'Pilot cohort of 8 mentees completing full training cycle',
       'Improvements in faculty self-efficacy and student success metrics'
     ],
-    contact:{name:'LeeAnne McNulty',role:'Project Lead',email:'leeanne.mcnulty@hancockcollege.edu',phone:'(805) 922-6966'},
-    altContact:{name:'Craig Bach Ph.D.',role:'Project Lead',email:'craig.bach@hancockcollege.edu',phone:'(805) 346-1006'},
-    fiscalReporter:{name:'Laura Becker',role:'Fiscal Reporter',email:'laura.becker@hancockcollege.edu',phone:'(805) 922-6966'},
+    contact:{name:'LeeAnne McNulty, Ed.D.',title:'Director of Institutional Grants',role:'Project Lead',email:'leeanne.mcnulty@hancockcollege.edu',phone:'(805) 922-6966 ext. 3450'},
+    altContact:{name:'Fernando "Fern" Robles, MA',title:'Grants Analyst II',role:'Alternate Project Lead',email:'fernando.roblesjr@hancockcollege.edu',phone:'(805) 922-6966 ext. 3959'},
+    fiscalReporter:{name:'Laura Becker',title:'Director, Business Services',role:'Fiscal Reporter',email:'laura.becker@hancockcollege.edu',phone:'(805) 922-6966 ext. 3268'},
+    planApprover:{name:'Craig N. Bach, Ph.D.',title:'Executive Director, Institutional Effectiveness',role:'Plan Approver',email:'craig.bach@hancockcollege.edu',phone:'(805) 922-6966 ext. 3755'},
     budgetHighlights:{'Instructional Salaries (1000)':46080,'Employee Benefits (3000)':9999,'Supplies & Materials (4000)':1159,'Other Operating & Services (5000)':38000,'Indirect (7000)':4762},
     yearlyBudget:{y1:58108,y2:41892},
     primaryFocus:'Hiring Equity & Mentorship', phases:[{label:'Framework design (DRS)',startQ:1,span:2,shade:'a'},{label:'DRS training + handbook',startQ:3,span:3,shade:'b'},{label:'Equity-faculty mentor cohort',startQ:4,span:4,shade:'c'},{label:'Evaluation & sustainability',startQ:8,span:3,shade:'d'}]
@@ -926,10 +928,10 @@ const districts = [
       'Districtwide showcase of faculty VR innovations',
       'VR content creation training using Unity tools'
     ],
-    contact:{name:'Bobby Becka',role:'Project Lead',email:'bobby.becka@kccd.edu',phone:'(661) 395-4102'},
-    altContact:{name:'Rachel Tatro-Duarte',role:'Project Lead',email:'rachel.tatroduarte@portervillecollege.edu',phone:'(559) 791-2200'},
-    fiscalReporter:{name:'Cathi Jacob',role:'Fiscal Reporter',email:'cjacob@kccd.edu',phone:'(661) 336-5078'},
-    planApprover:{name:'Melissa Thornsberry',role:'Plan Approver',email:'melissa.thornsberry@kccd.edu',phone:'(661) 336-5142'},
+    contact:{name:'Bobby Becka',title:'Director, Grants & Resource Development · Workforce & Economic Development',role:'Project Lead',email:'bobby.becka@kccd.edu',phone:'(661) 395-4102'},
+    altContact:{name:'Dr. Bonita Steele',title:'Director, Programs and Program Development · Workforce & Economic Development',role:'Alternate Project Lead',email:'bsteele@kccd.edu',phone:'(661) 336-5046'},
+    fiscalReporter:{name:'Cathi Jacob',title:'Assistant Director, Grants · Business Services',role:'Fiscal Reporter',email:'cjacob@kccd.edu',phone:'(661) 336-5105'},
+    planApprover:{name:'Dr. Melissa Thornsberry',title:'Vice Chancellor, Finance & Administrative Services · CFO',role:'Plan Approver',email:'melissa.thornsberry@kccd.edu',phone:'(661) 336-5142'},
     budgetHighlights:{'Certificated Salaries (1000)':32660,'Employee Benefits (3000)':7074,'Supplies & Equipment (4000)':90750,'Services (5000)':12020,'Indirect (7000)':7496},
     yearlyBudget:{y1:122238,y2:27762},
     primaryFocus:'VR Faculty Development', phases:[{label:'VR procurement + intake',startQ:1,span:2,shade:'a'},{label:'Yr 1 VR training (6-session)',startQ:2,span:4,shade:'b'},{label:'Yr 2 cohort + Unity content',startQ:5,span:4,shade:'c'},{label:'Districtwide VR showcase',startQ:9,span:2,shade:'d'}]
@@ -989,10 +991,10 @@ const districts = [
       'Program data collection and impact evaluation study',
       'Real-time engagement tracking at campus and system levels'
     ],
-    contact:{name:'Emily Kaplan',role:'Project Lead',email:'ekaplan@peralta.edu',phone:'(510) 599-4858'},
-    altContact:{name:'Jamille Teer',role:'Alternate Project Lead',email:'jteer@peralta.edu',phone:'(510) 466-7342'},
-    fiscalReporter:{name:'Emily Kaplan',role:'Fiscal Reporter',email:'ekaplan@peralta.edu',phone:'(510) 599-4858'},
-    planApprover:{name:'Sharon Buckner',role:'Plan Approver',email:'sbuckner@peralta.edu',phone:'(510) 466-7200'},
+    contact:{name:'Jamille Teer',title:'Facilities Project Coordinator',role:'Project Lead',email:'jteer@peralta.edu',phone:'(510) 466-7342'},
+    altContact:{name:'Emily Kaplan',title:'Dir. of Grants Management',role:'Project Lead',email:'ekaplan@peralta.edu',phone:'(510) 599-4858'},
+    fiscalReporter:{name:'Andrea Epps',title:'Interim Vice Chancellor, HR',role:'Project Lead',email:'aepps@peralta.edu',phone:'(510) 466-7386'},
+    planApprover:{name:'Dr. Tammeil Gilkerson',title:'Chancellor',role:'Senior Admin',email:'TGilkerson@peralta.edu',phone:'(510) 466-7200'},
     budgetHighlights:{'Non-Instructional Salaries (2000)':57420,'Employee Benefits (3000)':8280,'LIFT Services (5000)':29300,'Indirect (7000)':5000},
     yearlyBudget:{y1:62790,y2:37210},
     primaryFocus:'LIFT Mentorship Platform', phases:[{label:'LIFT platform deployment',startQ:1,span:2,shade:'a'},{label:'Yr 1 mentor pairing',startQ:2,span:4,shade:'b'},{label:'Yr 2 expansion + meet-ups',startQ:6,span:3,shade:'c'},{label:'Impact evaluation',startQ:9,span:2,shade:'d'}]
@@ -1881,6 +1883,7 @@ function renderContacts() {
               <div class="contact-avatar">${p.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase()}</div>
               <div class="contact-info">
                 <div class="contact-name">${p.name}</div>
+                ${p.title ? `<div class="contact-title">${p.title}</div>` : ''}
                 <div class="contact-role">${translateRole(p.role)}</div>
                 <a class="contact-email" href="mailto:${p.email}">${p.email}</a>
                 ${p.phone ? `<a class="contact-phone" href="tel:${p.phone.replace(/[^0-9+]/g,'')}">${p.phone}</a>` : ''}
