@@ -362,8 +362,8 @@
     @media (max-width:1180px) {
       .kpi-grid { grid-template-columns:repeat(3, minmax(0,1fr)); }
     }
-    @media (max-width:1100px) {
-      /* Internal sidebar collapses to a hamburger when the host's own chrome eats horizontal space */
+    @media (max-width:900px) {
+      /* Sidebar stays visible on desktop and tablet; only collapses on mobile (≤900px) */
       .sidebar { transform:translateX(-100%); }
       .sidebar.open { transform:translateX(0); box-shadow:var(--shadow-lg); }
       .sidebar-overlay.open { display:block; }
