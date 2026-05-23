@@ -711,10 +711,9 @@
           <p data-i18n="funds_sub">Detailed breakdown of grant funding across all 11 districts</p>
         </div>
         <div class="alloc-kpi-row">
-          <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label" data-i18n="kpi_total_allocated">Total Allocated</div><div class="kpi-value blue">$1,399,997</div><div class="kpi-sub" data-i18n="kpi_all_11">All 11 districts</div></div>
-          <div class="kpi-card"><div class="kpi-accent-bar blue"></div><div class="kpi-label" data-i18n="kpi_tier1_total">Tier 1 Total</div><div class="kpi-value blue">$999,997</div><div class="kpi-sub" data-i18n="kpi_7dist">7 districts</div></div>
-          <div class="kpi-card"><div class="kpi-accent-bar medium-blue"></div><div class="kpi-label" data-i18n="kpi_tier2_total">Tier 2 Total</div><div class="kpi-value medium-blue">$400,000</div><div class="kpi-sub" data-i18n="kpi_4dist">4 districts × $100K</div></div>
-          <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label" data-i18n="kpi_y1_total">Year 1 Total</div><div class="kpi-value gold" id="kpi-y1-total">—</div><div class="kpi-sub" data-i18n="kpi_y1_sub">Jan 2026 – Jun 2027</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label" data-i18n="kpi_total_allocated">Total Allocated</div><div class="kpi-value blue">$1,399,997</div><div class="kpi-sub" data-i18n="kpi_all_11">All 11 Districts</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label" data-i18n="kpi_tier1_total">Tier 1 Total</div><div class="kpi-value blue">$999,997</div><div class="kpi-sub" data-i18n="kpi_7dist">7 Districts</div></div>
+          <div class="kpi-card"><div class="kpi-accent-bar gold"></div><div class="kpi-label" data-i18n="kpi_tier2_total">Tier 2 Total</div><div class="kpi-value medium-blue">$400,000</div><div class="kpi-sub" data-i18n="kpi_4dist">4 Districts</div></div>
         </div>
 
         <div class="chart-card-full">
@@ -1138,9 +1137,9 @@ const translations = {
     table_district_summary:'District Summary',
     th_district:'District', th_tier:'Tier', th_funding:'Funding', th_y1:'Year 1', th_y2:'Year 2', th_focus:'Primary Focus', th_total:'Total',
     funds_title:'Fund Allocations', funds_sub:'Detailed breakdown of grant funding across all 11 districts',
-    kpi_total_allocated:'Total Allocated', kpi_all_11:'All 11 districts',
-    kpi_tier1_total:'Tier 1 Total', kpi_7dist:'7 districts',
-    kpi_tier2_total:'Tier 2 Total', kpi_4dist:'4 districts × $100K',
+    kpi_total_allocated:'Total Allocated', kpi_all_11:'All 11 Districts',
+    kpi_tier1_total:'Tier 1 Total', kpi_7dist:'7 Districts',
+    kpi_tier2_total:'Tier 2 Total', kpi_4dist:'4 Districts',
     kpi_y1_total:'Year 1 Total', kpi_y1_sub:'Jan 2026 – Jun 2027',
     chart_funding_district:'Funding by District', chart_direct:'Direct Allocation',
     chart_tier_split:'Tier Split', chart_y1y2:'Year 1 vs. Year 2 Spend', chart_by_dist:'By District',
@@ -1856,14 +1855,13 @@ function renderAllocationTable() {
   const totalY1 = districts.reduce((a, d) => a + d.yearlyBudget.y1, 0);
   const totalY2 = districts.reduce((a, d) => a + d.yearlyBudget.y2, 0);
   table.innerHTML = `
-    <thead><tr><th>${t('th_district')}</th><th>${t('th_tier')}</th><th>${t('th_direct_funding')}</th><th>${t('th_pct_total')}</th><th>${t('th_y1')}</th><th>${t('th_y2')}</th><th>${t('th_cccco_disbursed')}</th><th>${t('th_cccco_disbursed_rate')}</th></tr></thead>
+    <thead><tr><th>${t('th_district')}</th><th>${t('th_tier')}</th><th>${t('th_direct_funding')}</th><th>${t('th_y1')}</th><th>${t('th_y2')}</th><th>${t('th_cccco_disbursed')}</th><th>${t('th_cccco_disbursed_rate')}</th></tr></thead>
     <tbody>
       ${districts.map(d => `
         <tr>
           <td><strong>${d.shortName}</strong></td>
           <td><span class="tier-badge tier${d.tier}">${t('th_tier')} ${d.tier}${d.lift ? '<span class="lift-mark" title="LIFT Alliance">LIFT</span>' : ''}</span></td>
           <td class="amount">${fmt(d.funding)}</td>
-          <td><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;font-weight:600;">${((d.funding/total)*100).toFixed(1)}%</span><div class="progress-bar-wrap" style="flex:1;min-width:60px;"><div class="progress-bar-fill" style="width:${((d.funding/total)*100).toFixed(1)}%"></div></div></div></td>
           <td class="amount">${fmt(d.yearlyBudget.y1)}</td>
           <td class="amount">${fmt(d.yearlyBudget.y2)}</td>
           <td class="amount" style="color:var(--text-muted);">$0</td>
@@ -1872,7 +1870,6 @@ function renderAllocationTable() {
       <tr style="background:var(--bg-surface-2);">
         <td colspan="2"><strong>${t('th_total')}</strong></td>
         <td class="amount"><strong>${fmt(total)}</strong></td>
-        <td><strong>100%</strong></td>
         <td class="amount"><strong>${fmt(totalY1)}</strong></td>
         <td class="amount"><strong>${fmt(totalY2)}</strong></td>
         <td class="amount"><strong>$0</strong></td>
