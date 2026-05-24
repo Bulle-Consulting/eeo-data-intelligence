@@ -79,7 +79,7 @@
     a { color:inherit; text-decoration:none; }
     table { border-collapse:collapse; width:100%; }
     .app { display:flex; min-height:100dvh; }
-    .sidebar { position:fixed; left:0; top:0; height:100dvh; width:var(--sidebar-w); background:var(--ccc-medium-blue); color:#fff; display:flex; flex-direction:column; z-index:200; overflow-y:auto; overflow-x:hidden; transition:transform var(--transition); scrollbar-width:none; will-change:transform; }
+    .sidebar { position:fixed; left:0; top:0; height:100dvh; width:var(--sidebar-w); background:var(--ccc-dark-blue); color:#fff; display:flex; flex-direction:column; z-index:200; overflow-y:auto; overflow-x:hidden; transition:transform var(--transition); scrollbar-width:none; will-change:transform; }
     .sidebar::-webkit-scrollbar { display:none; }
     .sidebar-logo { padding:14px 18px 10px; border-bottom:1px solid rgba(255,255,255,0.10); display:flex; flex-direction:column; align-items:flex-start; }
     .logo-mark { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
@@ -104,8 +104,9 @@
     @media (max-width:760px) { .cccco-topbar-stamp { padding:4px 10px; height:34px; } .cccco-topbar-stamp img { height:20px; } }
     @media (max-width:520px) { .cccco-topbar-stamp { display:none; } }
     .sidebar-section-label { font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.55); padding:14px 18px 4px; }
-    .sidebar-footer { margin-top:auto; padding:18px 18px 22px; border-top:1px solid rgba(255,255,255,0.10); }
-    .powered-by-logo { display:block; width:100%; max-width:150px; height:auto; margin:0 auto; opacity:0.95; }
+    .sidebar-footer { margin-top:auto; padding:14px 18px 18px; border-top:1px solid rgba(255,255,255,0.10); }
+    .sidebar-footer-label { font-size:9.5px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.85); margin-bottom:4px; }
+    .sidebar-footer-val { font-size:12px; color:rgba(255,255,255,0.85); font-weight:500; line-height:1.35; }
     .nav-item { display:flex; align-items:center; gap:10px; padding:7px 18px; font-size:13px; font-weight:500; color:rgba(255,255,255,0.85); cursor:pointer; border-left:3px solid transparent; transition:all var(--transition); border:none; background:none; width:100%; text-align:left; }
     .nav-item:hover { background:rgba(255,255,255,0.07); color:#fff; }
     .nav-item.active { background:rgba(255,182,0,0.15); color:var(--ccc-gold); border-left:3px solid var(--ccc-gold); }
@@ -354,72 +355,37 @@
     .hamburger-btn { display:none; width:38px; height:38px; border-radius:var(--radius-md); align-items:center; justify-content:center; color:var(--text-secondary); border:1px solid var(--border); background:var(--bg-surface); cursor:pointer; transition:all var(--transition); }
     .hamburger-btn:hover { background:var(--bg-surface-2); }
     .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:150; }
-    /* ══════════════════════════════════════════════════
-       RESPONSIVE BREAKPOINTS
-       Dashboard renders inside a CRM whose 260-px primary
-       nav stays visible at all times, so the breakpoints
-       trigger generously to keep the experience clean in
-       narrow embeds, on tablets, and on phones.
-         ≥1280     full sidebar + full grids
-         1024-1279 full sidebar + 2-up condensed grids
-         768-1023  drawer sidebar + top mobile-nav + 2-col KPIs
-         481-767   same, tighter padding + smaller headings
-         ≤480      single-column KPIs, trimmed chrome
-         ≤380      ultra-narrow phone tweaks
-    ══════════════════════════════════════════════════ */
-
-    @media (max-width:1279px) {
-      .chart-grid-3 { grid-template-columns:1fr 1fr; }
-      .kpi-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
-    }
-
-    @media (max-width:1023px) {
+    @media (max-width:900px) {
       .sidebar { transform:translateX(-100%); }
       .sidebar.open { transform:translateX(0); box-shadow:var(--shadow-lg); }
       .sidebar-overlay.open { display:block; }
-      .hamburger-btn { display:inline-flex; }
-      .main { margin-left:0; height:auto; min-height:100dvh; padding-bottom:24px; }
-      .mobile-nav { display:flex; }
-      .content { padding-top:calc(var(--mobile-nav-h, 60px) + 8px); padding-left:20px; padding-right:20px; }
-      .topbar { padding:0 18px; }
-      .chart-grid { grid-template-columns:1fr; }
-      .chart-grid-3 { grid-template-columns:1fr; }
-      .outcomes-grid { grid-template-columns:1fr; }
+      .hamburger-btn { display:flex; }
+      .main { margin-left:0; height:auto; }
+      .topbar { padding:0 16px; }
+      .content { padding:16px; }
+    }
+    @media (max-width:880px) {
+      .kpi-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    }
+    @media (max-width:640px) {
       .kpi-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      .district-grid, .contacts-grid, .budget-grid { grid-template-columns:1fr; }
-      .grant-meta { gap:14px; flex-wrap:wrap; }
+    }
+    @media (max-width:768px) {
+      .chart-grid { grid-template-columns:1fr; }
+      .outcomes-grid { grid-template-columns:1fr; }
+      .mobile-nav { display:flex; }
+      .main { padding-bottom:0; height:auto; }
+      .district-grid,.contacts-grid,.budget-grid { grid-template-columns:1fr; }
+      .grant-meta { gap:14px; }
       .grant-meta-divider { display:none; }
       .topbar-title { font-size:16px; }
       .timeline-label { width:120px; }
       .timeline-total { width:64px; font-size:12px; }
-      .data-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-      .data-table { min-width:560px; }
     }
-
-    @media (max-width:767px) {
-      .content { padding-left:16px; padding-right:16px; padding-top:calc(var(--mobile-nav-h, 60px) + 6px); }
-      .topbar { padding:0 14px; gap:10px; }
-      .page-header h2 { font-size:22px; }
-      .grant-meta { padding:14px 16px; }
-      .grant-meta-item label { font-size:9px; }
-      .grant-meta-item span { font-size:13px; }
-    }
-
     @media (max-width:480px) {
-      .kpi-grid { grid-template-columns:1fr; }
+      .kpi-grid { grid-template-columns:1fr 1fr; }
       .kpi-value { font-size:22px; }
       .topbar-badge { display:none; }
-      .content { padding-left:12px; padding-right:12px; }
-      .powered-by-logo { max-width:130px; }
-      .sidebar { width:min(86vw, 280px); }
-    }
-
-    @media (max-width:380px) {
-      .topbar { padding:0 10px; }
-      .topbar-title { font-size:14px; }
-      .page-header h2 { font-size:20px; }
-      .mobile-nav-btn { font-size:9px; }
-      .mobile-nav-btn svg { width:16px; height:16px; }
     }
       .kpi-card { padding:14px; }
     }
@@ -633,7 +599,8 @@
       Spend-Down Monitor
     </button>
     <div class="sidebar-footer">
-      <img src="ccc-powered-by-white.svg" alt="Powered by California Community Colleges" class="powered-by-logo" />
+      <div class="sidebar-footer-label">Administered by</div>
+      <div class="sidebar-footer-val">California Community Colleges Chancellor&rsquo;s Office</div>
     </div>
   </aside>
 
