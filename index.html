@@ -598,6 +598,11 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Spend-Down Monitor
     </button>
+    <div class="sidebar-section-label">District Forms</div>
+    <button class="nav-item" onclick="showSection('bmr-updates',this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      BMR Updates
+    </button>
     <div class="sidebar-footer">
       <div class="sidebar-footer-label">Administered by</div>
       <div class="sidebar-footer-val">California Community Colleges Chancellor&rsquo;s Office</div>
@@ -831,6 +836,21 @@
         </div>
       </div>
 
+      <!-- BMR UPDATES - live Budget Modification Request feed from district dashboards -->
+      <div id="section-bmr-updates" class="section">
+        <div class="page-header"><h2>BMR Updates</h2><p>Live Budget Modification Request submissions pulled from each district's dashboard. New or revised modifications appear here automatically.</p></div>
+        <div class="card mb-24">
+          <div class="card-header">
+            <div class="card-title">Feed Status</div>
+            <button type="button" class="filter-btn" onclick="loadBmrUpdates(true)" style="cursor:pointer;">Refresh now</button>
+          </div>
+          <div class="card-body">
+            <p id="bmru-status" style="font-size:12.5px;color:var(--text-muted);margin:0;">Connecting to the BMR sync service...</p>
+          </div>
+        </div>
+        <div id="bmru-grid"></div>
+      </div>
+
     </main>
   </div>
 
@@ -844,6 +864,7 @@
       <button class="mobile-nav-btn" onclick="showSection('timeline',this,true)" data-mobile-nav><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span data-i18n="nav_timeline">Timeline</span></button>
       <button class="mobile-nav-btn" onclick="showSection('contacts',this,true)" data-mobile-nav><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span data-i18n="nav_contacts">Contacts</span></button>
       <button class="mobile-nav-btn" onclick="showSection('spenddown',this,true)" data-mobile-nav><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span data-i18n="nav_spenddown">Spend</span></button>
+      <button class="mobile-nav-btn" onclick="showSection('bmr-updates',this,true)" data-mobile-nav><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>BMR</span></button>
     </div>
   </nav>
 </div>
@@ -2285,9 +2306,105 @@ function renderAll() {
   if (typeof Chart !== 'undefined') initCharts();
 }
 
+
+/* ════════════ BMR UPDATES - live feed from district dashboards ════════════ */
+const BMR_SYNC_URL = '';   // bmr-sync Worker URL; the tab shows guidance while empty
+const BMRU_KNOWN = [
+  { id:'avc',  name:'Antelope Valley CCD' },
+  { id:'ahc',  name:'Allan Hancock Joint CCD' },
+  { id:'kern', name:'Kern CCD' },
+  { id:'peralta', name:'Peralta CCD' }
+];
+let bmruData = {};
+let bmruTimer = null;
+
+async function loadBmrUpdates(manual) {
+  const status = document.getElementById('bmru-status');
+  if (!BMR_SYNC_URL) {
+    if (status) status.textContent = 'The BMR sync service is not configured yet. Once the sync endpoint is deployed, district submissions will appear here automatically.';
+    renderBmrUpdates();
+    return;
+  }
+  try {
+    const res = await fetch(BMR_SYNC_URL + '/bmr', { cache: 'no-store' });
+    const data = await res.json();
+    bmruData = {};
+    (data.districts || []).forEach(d => { if (d && d.district) bmruData[d.district] = d; });
+    if (status) status.textContent = 'Live - last checked ' + new Date().toLocaleTimeString() + '. Updates publish automatically when district staff edit their Budget Modification Request forms.';
+  } catch (e) {
+    if (status) status.textContent = 'Could not reach the BMR sync service (' + (e && e.message ? e.message : 'network error') + '). Will retry automatically.';
+  }
+  renderBmrUpdates();
+}
+
+function bmruFmtTime(iso) {
+  try { return new Date(iso).toLocaleString(); } catch (e) { return iso || ''; }
+}
+
+function renderBmrUpdates() {
+  const grid = document.getElementById('bmru-grid');
+  if (!grid) return;
+  grid.innerHTML = BMRU_KNOWN.map(k => {
+    const d = bmruData[k.id];
+    if (!d || !d.baseline || !d.model) {
+      return '<div class="card mb-24"><div class="card-header"><div class="card-title">' + k.name + '</div><span class="risk-badge" style="background:var(--bg-surface-2);color:var(--text-muted);">No submission yet</span></div>' +
+             '<div class="card-body"><p style="font-size:12.5px;color:var(--text-muted);margin:0;">No Budget Modification Request data has been published by this district\u2019s dashboard yet.</p></div></div>';
+    }
+    const meta = (d.state && d.state.meta) || {};
+    const byCode = {};
+    (d.baseline || []).forEach(r => { byCode[r.code] = { base: r, mod: null }; });
+    (d.model || []).forEach(r => { if (byCode[r.code]) byCode[r.code].mod = r; else byCode[r.code] = { base: null, mod: r }; });
+    let by1 = 0, by2 = 0, my1 = 0, my2 = 0, changed = 0;
+    const rows = Object.keys(byCode).sort().map(code => {
+      const { base, mod } = byCode[code];
+      const b1 = base ? base.y1 : 0, b2 = base ? base.y2 : 0;
+      const m1 = mod ? mod.y1 : b1, m2 = mod ? mod.y2 : b2;
+      by1 += b1; by2 += b2; my1 += m1; my2 += m2;
+      const diff = Math.round((m1 + m2) - (b1 + b2));
+      if (diff !== 0) changed++;
+      const label = (base && base.label) || (mod && mod.label) || '';
+      const hl = diff !== 0 ? 'font-weight:700;color:var(--fig-color,var(--ccc-dark-blue));' : '';
+      const delta = diff === 0 ? '<span style="color:var(--text-muted);">no change</span>' : ((diff > 0 ? '+' : '\u2212') + fmt(Math.abs(diff)).replace('$','$'));
+      return '<tr><td>' + code + ' - ' + label + '</td>' +
+             '<td class="amount">' + fmt(b1) + ' / ' + fmt(b2) + '</td>' +
+             '<td class="amount" style="' + hl + '">' + fmt(m1) + ' / ' + fmt(m2) + '</td>' +
+             '<td class="amount" style="' + hl + '">' + delta + '</td></tr>';
+    }).join('');
+    const award = d.award || (by1 + by2);
+    const variance = Math.round((my1 + my2) - award);
+    const badge = variance === 0
+      ? '<span class="risk-badge" style="background:rgba(31,157,87,0.12);color:#1f9d57;">Balanced to award</span>'
+      : '<span class="risk-badge high">' + (variance > 0 ? 'Over award +' : 'Under award \u2212') + fmt(Math.abs(variance)).replace('$','$') + '</span>';
+    const submitted = [meta.submittedBy, meta.email, meta.date].filter(Boolean).join(' \u00b7 ');
+    return '<div class="card mb-24">' +
+      '<div class="card-header"><div><div class="card-title">' + (d.name || k.name) + '</div>' +
+      '<div class="chart-label">Updated ' + bmruFmtTime(d.updatedAt) + (submitted ? ' \u00b7 ' + submitted : '') + '</div></div>' + badge + '</div>' +
+      '<div class="card-body"><div class="data-table-wrap"><table class="data-table">' +
+      '<thead><tr><th>Object Code</th><th class="amount">Proposed Y1 / Y2</th><th class="amount">Modified Y1 / Y2</th><th class="amount">Change</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+      '<tfoot><tr><td style="font-weight:700;">Totals (' + changed + ' line' + (changed === 1 ? '' : 's') + ' modified)</td>' +
+      '<td class="amount" style="font-weight:700;">' + fmt(by1) + ' / ' + fmt(by2) + '</td>' +
+      '<td class="amount" style="font-weight:700;">' + fmt(my1) + ' / ' + fmt(my2) + '</td>' +
+      '<td class="amount" style="font-weight:700;">' + (variance === 0 ? 'Balanced' : (variance > 0 ? '+' : '\u2212') + fmt(Math.abs(variance)).replace('$','$')) + '</td></tr></tfoot>' +
+      '</table></div></div></div>';
+  }).join('');
+}
+
+function startBmrUpdatesFeed() {
+  loadBmrUpdates();
+  clearInterval(bmruTimer);
+  bmruTimer = setInterval(() => {
+    const sec = document.getElementById('section-bmr-updates');
+    // Poll faster while the tab is open, slower in the background
+    if (sec && sec.classList.contains('active')) loadBmrUpdates();
+  }, 30000);
+  setInterval(loadBmrUpdates, 300000);
+}
+
 /* ════════════ INIT ════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
+  startBmrUpdatesFeed();
   requestAnimationFrame(() => initCharts());
   // Restore the user's last active tab from URL hash or localStorage
   const initial = resolveInitialSection();
