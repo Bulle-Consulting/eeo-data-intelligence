@@ -12,23 +12,35 @@ submission relay that emails a completed BMR to the CCCCO EEO inbox.
 | `GET`  | `/bmr` | The "BMR Updates" (CRM) tab reads every district at once. |
 | `GET`  | `/bmr/{district}` | Read a single district. |
 
+## Email sender
+
+Email is sent by `sendSubmissionEmail()`, which prefers the **native Cloudflare
+Email Service** (`env.EMAIL` send binding — already declared in `wrangler.toml`).
+No third-party account or API key is required. If no `EMAIL` binding is present
+it falls back to Resend (`RESEND_API_KEY`).
+
 ## One-time deploy
 
 ```bash
 cd worker
 
-# 1. Create the KV store and paste the printed id into wrangler.toml (kv_namespaces).
-npx wrangler kv namespace create BMR
+# 1. KV store: already created (id is in wrangler.toml). To recreate:
+#    npx wrangler kv namespace create BMR
 
-# 2. Add your Resend API key as a secret (get one free at resend.com; verify your
-#    sending domain so MAIL_FROM works, e.g. noreply@bulleconsulting.com).
-npx wrangler secret put RESEND_API_KEY
+# 2. Onboard a sending domain to Email Service so the Worker can email external
+#    recipients (e.g. cccco.edu). In the Cloudflare dashboard:
+#      Compute > Email Service > enable, then add & verify the sending domain
+#      that MAIL_FROM uses (bulleconsulting.com). This adds DNS records.
 
 # 3. Deploy.
 npx wrangler deploy
 ```
 
 `wrangler deploy` prints the Worker URL (e.g. `https://bmr-sync.<account>.workers.dev`).
+
+Until the sending domain is onboarded, the `EMAIL` binding can only reach
+addresses verified as destinations in Email Routing — add `admin@bulleconsulting.com`
+there to test end-to-end before the domain is fully onboarded.
 
 ## Connect the dashboards
 
@@ -45,6 +57,7 @@ in `wrangler.toml` to adjust) — no per-user setup required.
 
 ## Swapping email providers
 
-Email is sent in `sendSubmissionEmail()` via the Resend REST API. To use a
-different provider (Postmark, SendGrid, MailChannels, SES, …), change only that
-one function; the rest of the Worker is provider-agnostic.
+Email is sent in `sendSubmissionEmail()` — native Cloudflare Email Service
+first, Resend as fallback. To use a different provider (Postmark, SendGrid,
+SES, …), change only that one function; the rest of the Worker is
+provider-agnostic.

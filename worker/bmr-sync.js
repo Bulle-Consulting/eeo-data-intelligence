@@ -10,10 +10,12 @@
  *
  * Storage: KV namespace bound as BMR (key per district, last write wins).
  *
- * Email (POST /submit): sent via Resend. Configure on the Worker:
- *   RESEND_API_KEY  (secret)      - `npx wrangler secret put RESEND_API_KEY`
- *   MAIL_FROM       (var)         - verified sender, e.g. "EEO Grant Forms <noreply@bulleconsulting.com>"
- *   SUBMIT_TO       (var, optional) - comma-separated default recipients; overridden by the request body
+ * Email (POST /submit): sent via the native Cloudflare Email Service send
+ * binding (env.EMAIL) — no third-party key. Falls back to Resend if configured.
+ *   send_email binding named EMAIL  - declared in wrangler.toml
+ *   MAIL_FROM  (var)                - sender on an onboarded Email Service domain, e.g. "noreply@bulleconsulting.com"
+ *   SUBMIT_TO  (var, optional)      - comma-separated default recipients; overridden by the request body
+ *   RESEND_API_KEY (secret, optional) - fallback provider only
  */
 const DEFAULT_TO = ['eeosubmissions@cccco.edu', 'admin@bulleconsulting.com'];
 const YEARS = {
@@ -182,22 +184,33 @@ function renderEmailText(record) {
 }
 
 async function sendSubmissionEmail(env, to, record) {
-  if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured on the Worker');
   const meta = (record.state && record.state.meta) || {};
   const name = record.name || meta.district || record.district || 'District';
   const subject = 'Budget Modification Request — ' + name + (meta.date ? ' (' + meta.date + ')' : '');
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      from: env.MAIL_FROM || 'EEO Grant Forms <noreply@bulleconsulting.com>',
-      to,
-      reply_to: meta.email || undefined,
-      subject,
-      html: renderEmailHtml(record),
-      text: renderEmailText(record)
-    })
-  });
-  if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 300));
-  return true;
+  const from = env.MAIL_FROM || 'noreply@bulleconsulting.com';
+  const html = renderEmailHtml(record);
+  const text = renderEmailText(record);
+
+  // Preferred: Cloudflare Email Service binding — no third-party key. Needs a
+  // send_email binding named EMAIL and an onboarded sending domain (so it can
+  // reach external recipients like cccco.edu).
+  if (env.EMAIL && typeof env.EMAIL.send === 'function') {
+    for (const addr of to) {
+      await env.EMAIL.send({ from, to: addr, subject, html, text });
+    }
+    return true;
+  }
+
+  // Fallback: Resend REST API (set the RESEND_API_KEY secret to use this instead).
+  if (env.RESEND_API_KEY) {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
+      body: JSON.stringify({ from, to, reply_to: meta.email || undefined, subject, html, text })
+    });
+    if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 300));
+    return true;
+  }
+
+  throw new Error('No email sender configured: add a send_email binding named EMAIL, or set RESEND_API_KEY.');
 }
