@@ -2346,7 +2346,8 @@ function renderBmrUpdates() {
   if (!grid) return;
   grid.innerHTML = BMRU_KNOWN.map(k => {
     const d = bmruData[k.id];
-    if (!d || !d.baseline || !d.model) {
+    // Only surface records the district actually submitted — never drafts.
+    if (!d || !d.submitted || !d.baseline || !d.model) {
       return '<div class="card mb-24"><div class="card-header"><div class="card-title">' + k.name + '</div><span class="risk-badge" style="background:var(--bg-surface-2);color:var(--text-muted);">No submission yet</span></div>' +
              '<div class="card-body"><p style="font-size:12.5px;color:var(--text-muted);margin:0;">No Budget Modification Request data has been published by this district\u2019s dashboard yet.</p></div></div>';
     }
