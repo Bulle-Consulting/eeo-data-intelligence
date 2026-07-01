@@ -1,0 +1,18 @@
+name = "bmr-sync"
+main = "bmr-sync.js"
+compatibility_date = "2024-11-01"
+
+# KV store for BMR records. Create it once, then paste the id here:
+#   npx wrangler kv namespace create BMR
+kv_namespaces = [
+  { binding = "BMR", id = "<your-kv-namespace-id>" }
+]
+
+[vars]
+# Verified sender in your Resend account (a domain you control, e.g. bulleconsulting.com).
+MAIL_FROM = "EEO Grant Forms <noreply@bulleconsulting.com>"
+# Default recipients (the request body may override these).
+SUBMIT_TO = "eeosubmissions@cccco.edu,admin@bulleconsulting.com"
+
+# RESEND_API_KEY is a SECRET — do not put it here. Set it with:
+#   npx wrangler secret put RESEND_API_KEY
