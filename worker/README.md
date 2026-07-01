@@ -12,6 +12,20 @@ submission relay that emails a completed BMR to the CCCCO EEO inbox.
 | `GET`  | `/bmr` | The "BMR Updates" (CRM) tab reads every district at once. |
 | `GET`  | `/bmr/{district}` | Read a single district. |
 
+## One Worker for every district (current and future)
+
+This Worker is district-agnostic. It keys everything off the `{district}` in the
+URL (`/bmr/{district}/submit`), stores one KV record per district, and defaults
+recipients from `SUBMIT_TO`. Any dashboard — existing or brand new — just needs
+to point its `BMR_SYNC_URL` at this one Worker; no per-district Worker changes,
+redeploys, or new infrastructure are required. Add a district by deploying its
+dashboard with a unique `BMR_SYNC_ID` and the shared `BMR_SYNC_URL`.
+
+Every submission email includes the **full form as an HTML attachment**
+(`Budget_Modification_<district>_<date>.html`) containing every section —
+meta, both years with complete justifications, and the reconciliation summary —
+so nothing is ever clipped.
+
 ## Email sender
 
 Email is sent by `sendSubmissionEmail()`, which prefers the **native Cloudflare

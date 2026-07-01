@@ -140,7 +140,19 @@ function renderEmailHtml(record) {
   const baseline = record.baseline || [];
   const years = (record.state && record.state.years) || {};
   const yhtml = ['y1', 'y2'].map(yk => renderYearHtml(baseline, (years[yk] && years[yk].rows) || {}, yk)).join('');
+  const m1 = yearTotal(baseline, (years.y1 && years.y1.rows) || {}, 'y1');
+  const m2 = yearTotal(baseline, (years.y2 && years.y2.rows) || {}, 'y2');
+  const award = record.award || (m1 + m2);
+  const variance = Math.round((m1 + m2) - award);
+  const varLabel = variance === 0 ? 'Balanced to award' : (variance > 0 ? 'Over award +' : 'Under award −') + money(Math.abs(variance)).slice(1);
   const row = (k, v) => v ? `<tr><td style="padding:2px 10px 2px 0;color:#555">${esc(k)}</td><td style="padding:2px 0"><strong>${esc(v)}</strong></td></tr>` : '';
+  const recon = `<h3 style="margin:18px 0 6px">Reconciliation</h3>
+    <table style="border-collapse:collapse;font-size:13px">
+      <tr><td style="padding:4px 16px 4px 0;color:#555">Total award (ceiling)</td><td style="padding:4px 0;text-align:right"><strong>${money(award)}</strong></td></tr>
+      <tr><td style="padding:4px 16px 4px 0;color:#555">Modified project budget</td><td style="padding:4px 0;text-align:right"><strong>${money(m1 + m2)}</strong></td></tr>
+      <tr><td style="padding:4px 16px 4px 0;color:#555">Variance vs award</td><td style="padding:4px 0;text-align:right"><strong>${esc(varLabel)}</strong></td></tr>
+      <tr><td style="padding:4px 16px 4px 0;color:#555">Modified Y1 / Y2</td><td style="padding:4px 0;text-align:right"><strong>${money(m1)} / ${money(m2)}</strong></td></tr>
+    </table>`;
   return `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:820px">
     <h2 style="margin:0 0 4px">Budget Modification Request</h2>
     <div style="color:#555;margin-bottom:12px">${esc(record.name || meta.district || record.district || '')}</div>
@@ -152,8 +164,25 @@ function renderEmailHtml(record) {
       ${row('Total award (ceiling)', money(record.award))}
     </table>
     ${yhtml}
+    ${recon}
     <p style="color:#888;font-size:12px;margin-top:18px">Submitted via the EEO district dashboard on ${esc(record.submittedAt || '')}.</p>
   </div>`;
+}
+
+// A complete, standalone HTML document of the form — attached to the email so
+// the recipient always has the full submission (every section) as a file.
+function buildFormDocHtml(record) {
+  const meta = (record.state && record.state.meta) || {};
+  const name = record.name || meta.district || record.district || 'Budget Modification Request';
+  return '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(name) +
+    ' — Budget Modification Request</title></head><body style="margin:24px;">' +
+    renderEmailHtml(record) + '</body></html>';
+}
+function b64utf8(s) { return btoa(unescape(encodeURIComponent(s))); }
+function attachmentName(record) {
+  const meta = (record.state && record.state.meta) || {};
+  const base = (record.name || record.district || 'district').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  return 'Budget_Modification_' + base + (meta.date ? '_' + meta.date : '') + '.html';
 }
 
 function renderEmailText(record) {
@@ -190,13 +219,20 @@ async function sendSubmissionEmail(env, to, record) {
   const from = env.MAIL_FROM || 'noreply@bulleconsulting.com';
   const html = renderEmailHtml(record);
   const text = renderEmailText(record);
+  // Full form as a standalone attachment — every section, nothing clipped.
+  const docHtml = buildFormDocHtml(record);
+  const docB64 = b64utf8(docHtml);
+  const docName = attachmentName(record);
 
   // Preferred: Cloudflare Email Service binding — no third-party key. Needs a
   // send_email binding named EMAIL and an onboarded sending domain (so it can
   // reach external recipients like cccco.edu).
   if (env.EMAIL && typeof env.EMAIL.send === 'function') {
     for (const addr of to) {
-      await env.EMAIL.send({ from, to: addr, subject, html, text });
+      await env.EMAIL.send({
+        from, to: addr, subject, html, text,
+        attachments: [{ filename: docName, content: docB64, type: 'text/html', disposition: 'attachment' }]
+      });
     }
     return true;
   }
@@ -206,7 +242,10 @@ async function sendSubmissionEmail(env, to, record) {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ from, to, reply_to: meta.email || undefined, subject, html, text })
+      body: JSON.stringify({
+        from, to, reply_to: meta.email || undefined, subject, html, text,
+        attachments: [{ filename: docName, content: docB64 }]
+      })
     });
     if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 300));
     return true;
