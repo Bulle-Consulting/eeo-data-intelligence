@@ -18,6 +18,16 @@
  *   RESEND_API_KEY (secret, optional) - fallback provider only
  */
 const DEFAULT_TO = ['eeosubmissions@cccco.edu', 'admin@bulleconsulting.com'];
+// Body of the notification email. The completed form goes out as attachments.
+const MESSAGE_LINES = [
+  'Dear EEO IBP Grant Initiative Team,',
+  '',
+  'A new submission has been received through the EEO IBP Grant Initiative Dashboard. The completed form and supporting documents are attached to this message.',
+  '',
+  'Please review the submitted materials to confirm they are complete and consistent with current EEO IBP Grant reporting and documentation requirements. If additional information or clarification is needed, contact the submitter using the information provided in the form.',
+  '',
+  'For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.'
+];
 const YEARS = {
   y1: { label: 'Year 1', dates: 'Jan 2026 – Jun 2027' },
   y2: { label: 'Year 2', dates: 'Jul 2027 – Jun 2028' }
@@ -43,7 +53,7 @@ export default {
       if (!district) return new Response('Bad district', { status: 400, headers: cors });
       let body;
       try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400, headers: cors }); }
-      if (JSON.stringify(body).length > 200000) return new Response('Too large', { status: 413, headers: cors });
+      if (JSON.stringify(body).length > 8000000) return new Response('Too large', { status: 413, headers: cors });
 
       const now = new Date().toISOString();
       const record = { ...body, district, submitted: true, submittedAt: body.submittedAt || now, updatedAt: now };
@@ -215,14 +225,26 @@ function renderEmailText(record) {
 async function sendSubmissionEmail(env, to, record) {
   const meta = (record.state && record.state.meta) || {};
   const name = record.name || meta.district || record.district || 'District';
-  const subject = 'Budget Modification Request — ' + name + (meta.date ? ' (' + meta.date + ')' : '');
+  const subject = 'EEO IBP Grant Initiative — New Submission — ' + name + (meta.date ? ' (' + meta.date + ')' : '');
   const from = env.MAIL_FROM || 'noreply@bulleconsulting.com';
-  const html = renderEmailHtml(record);
-  const text = renderEmailText(record);
-  // Full form as a standalone attachment — every section, nothing clipped.
-  const docHtml = buildFormDocHtml(record);
-  const docB64 = b64utf8(docHtml);
-  const docName = attachmentName(record);
+
+  // Email body is the notification message; the completed form is attached.
+  const text = MESSAGE_LINES.join('\n');
+  const html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.55">' +
+    MESSAGE_LINES.filter(l => l !== '').map(l => '<p style="margin:0 0 12px">' + esc(l) + '</p>').join('') +
+    '</div>';
+
+  // Attachments: the completed form as an HTML document (client-rendered to look
+  // exactly like the form, with a server-built fallback) and, when the client
+  // provides it, a matching PDF. Both show every field the user filled in.
+  const baseName = (record.name || record.district || 'district').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const dateSuffix = meta.date ? '_' + meta.date : '';
+  const stem = 'Budget_Modification_Request_' + baseName + dateSuffix;
+  const htmlDoc = (typeof record.formHtml === 'string' && record.formHtml) ? record.formHtml : buildFormDocHtml(record);
+  const attachments = [{ filename: stem + '.html', b64: b64utf8(htmlDoc), type: 'text/html' }];
+  if (typeof record.pdfBase64 === 'string' && record.pdfBase64) {
+    attachments.push({ filename: stem + '.pdf', b64: record.pdfBase64.replace(/^data:[^,]*,/, ''), type: 'application/pdf' });
+  }
 
   // Preferred: Cloudflare Email Service binding — no third-party key. Needs a
   // send_email binding named EMAIL and an onboarded sending domain (so it can
@@ -231,7 +253,7 @@ async function sendSubmissionEmail(env, to, record) {
     for (const addr of to) {
       await env.EMAIL.send({
         from, to: addr, subject, html, text,
-        attachments: [{ filename: docName, content: docB64, type: 'text/html', disposition: 'attachment' }]
+        attachments: attachments.map(a => ({ filename: a.filename, content: a.b64, type: a.type, disposition: 'attachment' }))
       });
     }
     return true;
@@ -244,7 +266,7 @@ async function sendSubmissionEmail(env, to, record) {
       headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
       body: JSON.stringify({
         from, to, reply_to: meta.email || undefined, subject, html, text,
-        attachments: [{ filename: docName, content: docB64 }]
+        attachments: attachments.map(a => ({ filename: a.filename, content: a.b64 }))
       })
     });
     if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 300));
