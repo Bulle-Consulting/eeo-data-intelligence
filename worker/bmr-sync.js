@@ -1,277 +1,409 @@
-/**
- * bmr-sync - shared store for District Budget Modification Request (BMR) data,
- * plus a submission relay that emails a completed BMR to the CCCCO EEO inbox.
- *
- * Endpoints:
- *   PUT  /bmr/{district}         - a district dashboard publishes its live BMR data
- *   POST /bmr/{district}/submit  - district submits: store the record + email a full copy
- *   GET  /bmr                    - the BMR Updates (CRM) tab reads every district at once
- *   GET  /bmr/{district}         - read a single district
- *
- * Storage: KV namespace bound as BMR (key per district, last write wins).
- *
- * Email (POST /submit): sent via the native Cloudflare Email Service send
- * binding (env.EMAIL) — no third-party key. Falls back to Resend if configured.
- *   send_email binding named EMAIL  - declared in wrangler.toml
- *   MAIL_FROM  (var)                - sender on an onboarded Email Service domain, e.g. "noreply@bulleconsulting.com"
- *   SUBMIT_TO  (var, optional)      - comma-separated default recipients; overridden by the request body
- *   RESEND_API_KEY (secret, optional) - fallback provider only
- */
-const DEFAULT_TO = ['eeosubmissions@cccco.edu', 'admin@bulleconsulting.com'];
-// Body of the notification email. The completed form goes out as attachments.
-const MESSAGE_LINES = [
+// bmr-sync — Cloudflare Worker for Budget Modification Request submissions.
+// Persists BMR state in KV; on submit emails the EEO IBP notification message
+// with the completed form attached as BOTH an HTML document and a PDF.
+
+// Notification message shown in the email body (form goes out as attachments).
+const SUBMISSION_MESSAGE_TEXT = [
   'Dear EEO IBP Grant Initiative Team,',
   '',
   'A new submission has been received through the EEO IBP Grant Initiative Dashboard. The completed form and supporting documents are attached to this message.',
   '',
   'Please review the submitted materials to confirm they are complete and consistent with current EEO IBP Grant reporting and documentation requirements. If additional information or clarification is needed, contact the submitter using the information provided in the form.',
   '',
-  'For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.'
-];
-const YEARS = {
-  y1: { label: 'Year 1', dates: 'Jan 2026 – Jun 2027' },
-  y2: { label: 'Year 2', dates: 'Jul 2027 – Jun 2028' }
-};
+  'For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.',
+].join('\n');
+
+const SUBMISSION_MESSAGE_HTML = `<!doctype html><html><body style="margin:0;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Arial,sans-serif;color:#0F172A">
+  <div style="max-width:640px;margin:0 auto;padding:24px 20px">
+    <div style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E5E7EB;font-size:14px;line-height:1.6;color:#334155">
+      <p style="margin:0 0 12px">Dear EEO IBP Grant Initiative Team,</p>
+      <p style="margin:0 0 12px">A new submission has been received through the EEO IBP Grant Initiative Dashboard. The completed form and supporting documents are attached to this message.</p>
+      <p style="margin:0 0 12px">Please review the submitted materials to confirm they are complete and consistent with current EEO IBP Grant reporting and documentation requirements. If additional information or clarification is needed, contact the submitter using the information provided in the form.</p>
+      <p style="margin:0">For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.</p>
+    </div>
+    <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">bmr-sync · Bulle Consulting · CCCCO EEO IBP Grant</p>
+  </div>
+</body></html>`;
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const cors = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    };
-    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+    if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
+    if (url.pathname === '/health') return cors(new Response('ok', { status: 200 }));
 
-    const parts = url.pathname.split('/').filter(Boolean);
-    if (parts[0] !== 'bmr') return new Response('Not found', { status: 404, headers: cors });
-    const json = { ...cors, 'content-type': 'application/json', 'cache-control': 'no-store' };
+    const m = url.pathname.match(/^\/bmr\/([a-z0-9-]{1,32})(?:\/(submit))?$/i);
+    if (!m) return cors(new Response('not found', { status: 404 }));
+    const district = m[1].toLowerCase();
+    const isSubmit = m[2] === 'submit';
 
-    // Submit: persist the record (so the CRM tab shows it) AND email a full copy.
-    if (request.method === 'POST' && parts[1] && parts[2] === 'submit') {
-      const district = parts[1].toLowerCase().replace(/[^a-z0-9_-]/g, '');
-      if (!district) return new Response('Bad district', { status: 400, headers: cors });
-      let body;
-      try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400, headers: cors }); }
-      if (JSON.stringify(body).length > 8000000) return new Response('Too large', { status: 413, headers: cors });
+    if (request.method === 'GET' && !isSubmit) {
+      const stored = await env.BMR_STATE.get(district, 'json');
+      return cors(json(stored || { district, empty: true }));
+    }
+    if (request.method === 'PUT' && !isSubmit) {
+      const body = await safeJson(request);
+      if (!body) return cors(new Response('invalid json', { status: 400 }));
+      await env.BMR_STATE.put(district, JSON.stringify({ ...body, updatedAt: new Date().toISOString() }));
+      return cors(json({ ok: true, district }));
+    }
+    if (request.method === 'POST' && isSubmit) {
+      const body = await safeJson(request);
+      if (!body) return cors(new Response('invalid json', { status: 400 }));
 
-      const now = new Date().toISOString();
-      const record = { ...body, district, submitted: true, submittedAt: body.submittedAt || now, updatedAt: now };
-      await env.BMR.put('bmr:' + district, JSON.stringify(record));
+      await env.BMR_STATE.put(district, JSON.stringify({ ...body, submittedAt: body.submittedAt || new Date().toISOString() }));
 
-      const to = (Array.isArray(body.recipients) && body.recipients.length)
+      const recipients = Array.isArray(body.recipients) && body.recipients.length
         ? body.recipients
-        : (env.SUBMIT_TO ? env.SUBMIT_TO.split(',').map(s => s.trim()).filter(Boolean) : DEFAULT_TO);
-      try {
-        await sendSubmissionEmail(env, to, record);
-      } catch (e) {
-        // The record is stored; report the email failure so the client can fall back.
-        return new Response(JSON.stringify({ ok: false, stored: true, error: String((e && e.message) || e) }), { status: 502, headers: json });
+        : ['eeosubmissions@cccco.edu', 'admin@bulleconsulting.com'];
+      const districtLabel = body.name || district;
+      const meta = (body.state && body.state.meta) || {};
+      const dateStr = (meta.date || new Date().toISOString().slice(0, 10)).replace(/[^a-z0-9]/gi, '-');
+      const subject = `EEO IBP Grant Initiative — New Submission — ${districtLabel}${meta.date ? ' (' + meta.date + ')' : ''}`;
+      const formHtml = renderFormHtml(body);
+      const pdfBytes = await renderPdfFromHtml(env, formHtml);
+
+      // Attach BOTH the HTML document and (when the PDF renders) the PDF.
+      const stem = safeFilename(`Budget_Modification_Request-${districtLabel}-${dateStr}`);
+      const attachments = [
+        { filename: stem + '.html', content: b64(formHtml), content_type: 'text/html' },
+      ];
+      if (pdfBytes) {
+        attachments.push({ filename: stem + '.pdf', content: bytesToB64(pdfBytes), content_type: 'application/pdf' });
       }
-      return new Response(JSON.stringify({ ok: true, district, emailed: to }), { headers: json });
-    }
 
-    if (request.method === 'PUT' && parts[1] && !parts[2]) {
-      const district = parts[1].toLowerCase().replace(/[^a-z0-9_-]/g, '');
-      if (!district) return new Response('Bad district', { status: 400, headers: cors });
-      let body;
-      try { body = await request.json(); } catch { return new Response('Bad JSON', { status: 400, headers: cors }); }
-      if (JSON.stringify(body).length > 200000) return new Response('Too large', { status: 413, headers: cors });
-      const record = { ...body, district, updatedAt: new Date().toISOString() };
-      await env.BMR.put('bmr:' + district, JSON.stringify(record));
-      return new Response(JSON.stringify({ ok: true, district }), { headers: json });
+      const mail = await sendMail(env, {
+        to: recipients,
+        subject,
+        text: SUBMISSION_MESSAGE_TEXT,
+        html: SUBMISSION_MESSAGE_HTML,
+        attachments,
+      });
+      return cors(json(mail.ok
+        ? { ok: true, district, mailed: true, recipients, attachments: attachments.map(a => a.filename) }
+        : { ok: true, district, mailed: false, mailError: mail.error }));
     }
-
-    if (request.method === 'GET' && !parts[1]) {
-      const list = await env.BMR.list({ prefix: 'bmr:' });
-      const out = [];
-      for (const k of list.keys) {
-        const v = await env.BMR.get(k.name);
-        if (v) { try { out.push(JSON.parse(v)); } catch {} }
-      }
-      return new Response(JSON.stringify({ districts: out }), { headers: json });
-    }
-
-    if (request.method === 'GET' && parts[1]) {
-      const v = await env.BMR.get('bmr:' + parts[1].toLowerCase());
-      return new Response(v || 'null', { headers: json });
-    }
-
-    return new Response('Method not allowed', { status: 405, headers: cors });
-  }
+    return cors(new Response('method not allowed', { status: 405 }));
+  },
 };
 
-/* ── Email rendering ───────────────────────────────────────────────────────── */
-
+// -------------------- utils --------------------
+function cors(res) {
+  const h = new Headers(res.headers);
+  h.set('access-control-allow-origin', '*');
+  h.set('access-control-allow-methods', 'GET,PUT,POST,OPTIONS');
+  h.set('access-control-allow-headers', 'content-type');
+  return new Response(res.body, { status: res.status, headers: h });
+}
+function json(v) { return new Response(JSON.stringify(v), { headers: { 'content-type': 'application/json' } }); }
+async function safeJson(request) { try { return await request.json(); } catch { return null; } }
+function b64(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function safeFilename(s) { return s.replace(/[^a-z0-9._-]+/gi, '-'); }
 function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-function money(v) {
-  return (v == null || v === '') ? '—' : '$' + Math.round(Number(v)).toLocaleString('en-US');
+function money(n) {
+  const v = Number(n);
+  if (!isFinite(v)) return '—';
+  return v.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 }
-function yearTotal(baseline, rows, yk) {
-  return baseline.reduce((s, b) => {
-    const r = (rows && rows[b.code]) || {};
-    return s + (r.proposed != null ? r.proposed : b[yk]);
-  }, 0);
-}
+function moneyOrDash(v) { return (v == null || v === '') ? '—' : money(v); }
 
-function renderYearHtml(baseline, rows, yk) {
-  const y = YEARS[yk] || { label: yk, dates: '' };
-  const body = baseline.map(b => {
-    const r = (rows && rows[b.code]) || {};
-    const proposed = r.proposed != null ? r.proposed : b[yk];
-    const cell = 'border:1px solid #ddd;padding:6px 8px';
-    return `<tr>
-      <td style="${cell};font-weight:600">${esc(b.code)}</td>
-      <td style="${cell}">${esc(r.description || b.label)}</td>
-      <td style="${cell};text-align:right">${money(proposed)}</td>
-      <td style="${cell};text-align:right">${money(r.actuals)}</td>
-      <td style="${cell};text-align:right">${money(r.balance)}</td>
-      <td style="${cell};text-align:right">${money(r.projections)}</td>
-      <td style="${cell}">${esc(r.updates || '')}</td>
-    </tr>`;
-  }).join('');
-  const th = 'border:1px solid #ddd;padding:6px 8px;text-align:left;background:#f3f4f6;font-size:12px';
-  return `<h3 style="margin:18px 0 6px">${esc(y.label)} · ${esc(y.dates)} — Modified total: ${money(yearTotal(baseline, rows, yk))}</h3>
-    <table style="border-collapse:collapse;width:100%;font-size:13px">
-      <thead><tr>
-        <th style="${th}">Type</th><th style="${th}">Description</th>
-        <th style="${th}">Proposed</th><th style="${th}">Actuals</th>
-        <th style="${th}">Fund Balance</th><th style="${th}">Projections</th>
-        <th style="${th}">Expenditure Update (justification)</th>
-      </tr></thead>
-      <tbody>${body}</tbody>
-    </table>`;
-}
-
-function renderEmailHtml(record) {
-  const meta = (record.state && record.state.meta) || {};
-  const baseline = record.baseline || [];
-  const years = (record.state && record.state.years) || {};
-  const yhtml = ['y1', 'y2'].map(yk => renderYearHtml(baseline, (years[yk] && years[yk].rows) || {}, yk)).join('');
-  const m1 = yearTotal(baseline, (years.y1 && years.y1.rows) || {}, 'y1');
-  const m2 = yearTotal(baseline, (years.y2 && years.y2.rows) || {}, 'y2');
-  const award = record.award || (m1 + m2);
-  const variance = Math.round((m1 + m2) - award);
-  const varLabel = variance === 0 ? 'Balanced to award' : (variance > 0 ? 'Over award +' : 'Under award −') + money(Math.abs(variance)).slice(1);
-  const row = (k, v) => v ? `<tr><td style="padding:2px 10px 2px 0;color:#555">${esc(k)}</td><td style="padding:2px 0"><strong>${esc(v)}</strong></td></tr>` : '';
-  const recon = `<h3 style="margin:18px 0 6px">Reconciliation</h3>
-    <table style="border-collapse:collapse;font-size:13px">
-      <tr><td style="padding:4px 16px 4px 0;color:#555">Total award (ceiling)</td><td style="padding:4px 0;text-align:right"><strong>${money(award)}</strong></td></tr>
-      <tr><td style="padding:4px 16px 4px 0;color:#555">Modified project budget</td><td style="padding:4px 0;text-align:right"><strong>${money(m1 + m2)}</strong></td></tr>
-      <tr><td style="padding:4px 16px 4px 0;color:#555">Variance vs award</td><td style="padding:4px 0;text-align:right"><strong>${esc(varLabel)}</strong></td></tr>
-      <tr><td style="padding:4px 16px 4px 0;color:#555">Modified Y1 / Y2</td><td style="padding:4px 0;text-align:right"><strong>${money(m1)} / ${money(m2)}</strong></td></tr>
-    </table>`;
-  return `<div style="font-family:Arial,Helvetica,sans-serif;color:#111;max-width:820px">
-    <h2 style="margin:0 0 4px">Budget Modification Request</h2>
-    <div style="color:#555;margin-bottom:12px">${esc(record.name || meta.district || record.district || '')}</div>
-    <table style="font-size:13px;margin-bottom:8px">
-      ${row('Submitted by', meta.submittedBy)}
-      ${row('Email', meta.email)}
-      ${row('Submission date', meta.date)}
-      ${row('Approved by', meta.approvedBy)}
-      ${row('Total award (ceiling)', money(record.award))}
-    </table>
-    ${yhtml}
-    ${recon}
-    <p style="color:#888;font-size:12px;margin-top:18px">Submitted via the EEO district dashboard on ${esc(record.submittedAt || '')}.</p>
-  </div>`;
-}
-
-// A complete, standalone HTML document of the form — attached to the email so
-// the recipient always has the full submission (every section) as a file.
-function buildFormDocHtml(record) {
-  const meta = (record.state && record.state.meta) || {};
-  const name = record.name || meta.district || record.district || 'Budget Modification Request';
-  return '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(name) +
-    ' — Budget Modification Request</title></head><body style="margin:24px;">' +
-    renderEmailHtml(record) + '</body></html>';
-}
-function b64utf8(s) { return btoa(unescape(encodeURIComponent(s))); }
-function attachmentName(record) {
-  const meta = (record.state && record.state.meta) || {};
-  const base = (record.name || record.district || 'district').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
-  return 'Budget_Modification_' + base + (meta.date ? '_' + meta.date : '') + '.html';
-}
-
-function renderEmailText(record) {
-  const meta = (record.state && record.state.meta) || {};
-  const baseline = record.baseline || [];
-  const years = (record.state && record.state.years) || {};
-  const L = ['BUDGET MODIFICATION REQUEST', (record.name || meta.district || record.district || ''), ''];
-  if (meta.submittedBy) L.push('Submitted by: ' + meta.submittedBy);
-  if (meta.email) L.push('Email: ' + meta.email);
-  if (meta.date) L.push('Submission date: ' + meta.date);
-  if (meta.approvedBy) L.push('Approved by: ' + meta.approvedBy);
-  L.push('Total award (ceiling): ' + money(record.award), '');
-  ['y1', 'y2'].forEach(yk => {
-    const rows = (years[yk] && years[yk].rows) || {};
-    const y = YEARS[yk] || { label: yk, dates: '' };
-    L.push('== ' + y.label.toUpperCase() + ' · ' + y.dates + ' ==  Modified total: ' + money(yearTotal(baseline, rows, yk)));
-    baseline.forEach(b => {
-      const r = rows[b.code] || {};
-      const proposed = r.proposed != null ? r.proposed : b[yk];
-      L.push(b.code + ' ' + b.label);
-      L.push('    Proposed ' + money(proposed) + ' | Actuals ' + money(r.actuals) +
-             ' | Fund Balance ' + money(r.balance) + ' | Projections ' + money(r.projections));
-      if (r.updates && String(r.updates).trim()) L.push('    Update: ' + String(r.updates).trim());
-    });
-    L.push('');
-  });
-  return L.join('\n');
-}
-
-async function sendSubmissionEmail(env, to, record) {
-  const meta = (record.state && record.state.meta) || {};
-  const name = record.name || meta.district || record.district || 'District';
-  const subject = 'EEO IBP Grant Initiative — New Submission — ' + name + (meta.date ? ' (' + meta.date + ')' : '');
-  const from = env.MAIL_FROM || env.SENDER_ADDR || 'noreply@bulleconsulting.com';
-
-  // Email body is the notification message; the completed form is attached.
-  const text = MESSAGE_LINES.join('\n');
-  const html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;line-height:1.55">' +
-    MESSAGE_LINES.filter(l => l !== '').map(l => '<p style="margin:0 0 12px">' + esc(l) + '</p>').join('') +
-    '</div>';
-
-  // Attachments: the completed form as an HTML document (client-rendered to look
-  // exactly like the form, with a server-built fallback) and, when the client
-  // provides it, a matching PDF. Both show every field the user filled in.
-  const baseName = (record.name || record.district || 'district').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_|_$/g, '');
-  const dateSuffix = meta.date ? '_' + meta.date : '';
-  const stem = 'Budget_Modification_Request_' + baseName + dateSuffix;
-  const htmlDoc = (typeof record.formHtml === 'string' && record.formHtml) ? record.formHtml : buildFormDocHtml(record);
-  const attachments = [{ filename: stem + '.html', b64: b64utf8(htmlDoc), type: 'text/html' }];
-  if (typeof record.pdfBase64 === 'string' && record.pdfBase64) {
-    attachments.push({ filename: stem + '.pdf', b64: record.pdfBase64.replace(/^data:[^,]*,/, ''), type: 'application/pdf' });
-  }
-
-  // Preferred: Cloudflare Email Service binding — no third-party key. Needs a
-  // send_email binding named EMAIL and an onboarded sending domain (so it can
-  // reach external recipients like cccco.edu).
-  if (env.EMAIL && typeof env.EMAIL.send === 'function') {
-    for (const addr of to) {
-      await env.EMAIL.send({
-        from, to: addr, subject, html, text,
-        attachments: attachments.map(a => ({ filename: a.filename, content: a.b64, type: a.type, disposition: 'attachment' }))
-      });
-    }
-    return true;
-  }
-
-  // Fallback: Resend REST API (set the RESEND_API_KEY secret to use this instead).
-  if (env.RESEND_API_KEY) {
-    const res = await fetch('https://api.resend.com/emails', {
+async function renderPdfFromHtml(env, html) {
+  const tok = env.CF_API_TOKEN;
+  const accountId = env.CF_ACCOUNT_ID || 'cf21c30e35a4b95b280bba9b1497d670';
+  if (!tok) return null;
+  try {
+    const r = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/browser-rendering/pdf`, {
       method: 'POST',
-      headers: { authorization: 'Bearer ' + env.RESEND_API_KEY, 'content-type': 'application/json' },
+      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from, to, reply_to: meta.email || undefined, subject, html, text,
-        attachments: attachments.map(a => ({ filename: a.filename, content: a.b64 }))
-      })
+        html,
+        viewport: { width: 1400, height: 900, deviceScaleFactor: 1 },
+        pdfOptions: {
+          format: 'letter',
+          landscape: true,
+          printBackground: true,
+          margin: { top: '0.35in', bottom: '0.35in', left: '0.35in', right: '0.35in' },
+          preferCSSPageSize: true
+        }
+      }),
     });
-    if (!res.ok) throw new Error('Resend ' + res.status + ': ' + (await res.text()).slice(0, 300));
-    return true;
-  }
+    if (r.status >= 200 && r.status < 300) {
+      const buf = new Uint8Array(await r.arrayBuffer());
+      const sig = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46;
+      return sig ? buf : null;
+    }
+  } catch { /* fall through to null */ }
+  return null;
+}
 
-  throw new Error('No email sender configured: add a send_email binding named EMAIL, or set RESEND_API_KEY.');
+function bytesToB64(u8) {
+  let bin = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < u8.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, u8.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
+}
+
+async function sendMail(env, { to, subject, text, html, attachments }) {
+  const key = env.RESEND_API_KEY;
+  if (!key) return { ok: false, error: 'no RESEND_API_KEY configured' };
+  const from = env.SENDER_ADDR || 'BMR Sync <bmr-sync@bulleconsulting.com>';
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject, text, html, attachments }),
+  });
+  if (res.status >= 200 && res.status < 300) return { ok: true };
+  const error = await res.text().catch(() => `${res.status}`);
+  return { ok: false, error };
+}
+
+// -------------------- helpers to normalize incoming shape --------------------
+// Baseline / model may arrive as either:
+//   Array of { code, label, y1, y2 }  (dashboard shape)
+//   or Object { category: amount }    (legacy)
+function baselineArray(body) {
+  if (Array.isArray(body.baseline)) return body.baseline;
+  const b = body.baseline || {};
+  return Object.keys(b).map(code => ({ code, label: code, y1: 0, y2: 0 }));
+}
+function modelArray(body) {
+  if (Array.isArray(body.model)) return body.model;
+  const m = body.model || {};
+  return Object.keys(m).map(code => ({ code, label: code, y1: 0, y2: 0 }));
+}
+const YEAR_META_DEFAULT = { y1: { label: 'Year 1', dates: '' }, y2: { label: 'Year 2', dates: '' } };
+
+// -------------------- text summary (retained; unused for the email body) --------------------
+function renderTextBody(body) {
+  const meta = (body.state && body.state.meta) || {};
+  const lines = [];
+  lines.push('BUDGET MODIFICATION REQUEST');
+  lines.push(meta.district || body.name || body.district || '');
+  lines.push('');
+  if (meta.submittedBy) lines.push('Submitted by: ' + meta.submittedBy);
+  if (meta.email) lines.push('Email: ' + meta.email);
+  if (meta.date) lines.push('Submission date: ' + meta.date);
+  if (meta.approvedBy) lines.push('Approved by: ' + meta.approvedBy);
+  lines.push('');
+  if (body.award != null) lines.push('Total award (ceiling): ' + money(body.award));
+  const modelTotal = modelArray(body).reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0);
+  if (modelArray(body).length) lines.push('Modified project budget: ' + money(modelTotal));
+  return lines.join('\n');
+}
+
+// -------------------- the full form (attached HTML file) --------------------
+function renderFormHtml(body) {
+  const meta = (body.state && body.state.meta) || {};
+  const yearMeta = (body.state && body.state.yearMeta) || YEAR_META_DEFAULT;
+  const years = (body.state && body.state.years) || {};
+  const baseline = baselineArray(body);
+  const model = modelArray(body);
+
+  const districtLabel = esc(meta.district || body.name || body.district || '');
+  const submittedDate = esc(meta.date || new Date().toISOString().slice(0, 10));
+  const approvedBy = esc(meta.approvedBy || '');
+
+  // Per-year totals for KPI cards at the bottom
+  const yearTotals = { y1: { proposed: 0 }, y2: { proposed: 0 } };
+  const yearBaselineTotals = { y1: 0, y2: 0 };
+  baseline.forEach(bl => {
+    yearBaselineTotals.y1 += Number(bl.y1) || 0;
+    yearBaselineTotals.y2 += Number(bl.y2) || 0;
+  });
+
+  const modelTotal = model.reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0);
+  const ceiling = body.award != null ? money(body.award) : '—';
+  const varianceVsAward = modelTotal - (Number(body.award) || 0);
+
+  // Per-year table: Expenditure Type | Description | Proposed Funds | Actuals | Fund Balance | Projections | Expenditure Updates
+  const yearSections = ['y1', 'y2'].map(yk => {
+    const ym = yearMeta[yk] || { label: yk.toUpperCase(), dates: '' };
+    const yearRows = (years[yk] && years[yk].rows) || {};
+    let totProposed = 0, totActuals = 0, totBalance = 0, totProjections = 0;
+    const dollar = (v) => (v == null || v === '') ? '<span class="dim">—</span>' : '<span class="dollar">$</span>&nbsp;' + esc(Number(v).toLocaleString('en-US'));
+    const rows = baseline.map(bl => {
+      const rs = yearRows[bl.code] || {};
+      const base = Number(bl[yk]) || 0;
+      const proposedRaw = rs.proposed != null && rs.proposed !== '' ? Number(rs.proposed) : base;
+      const actualsRaw = rs.actuals != null && rs.actuals !== '' ? Number(rs.actuals) : 0;
+      const balanceRaw = rs.balance != null && rs.balance !== '' ? Number(rs.balance) : null;
+      const projRaw = rs.projections != null && rs.projections !== '' ? Number(rs.projections) : null;
+      totProposed += Number(proposedRaw) || 0;
+      totActuals += Number(actualsRaw) || 0;
+      if (balanceRaw != null) totBalance += balanceRaw;
+      if (projRaw != null) totProjections += projRaw;
+      const description = (rs.description != null && String(rs.description).trim()) || (bl.label || '');
+      const updates = rs.updates && String(rs.updates).trim();
+      return `<tr>
+        <td class="code"><span class="code-num${bl.code === '7000' ? ' indirect' : ''}">${esc(bl.code)}</span></td>
+        <td class="desc">${esc(description)}</td>
+        <td class="num">${dollar(proposedRaw)}</td>
+        <td class="num">${dollar(actualsRaw)}</td>
+        <td class="num">${dollar(balanceRaw)}</td>
+        <td class="num">${dollar(projRaw)}</td>
+        <td class="upd">${updates ? esc(updates) : ''}</td>
+      </tr>`;
+    }).join('');
+
+    yearTotals[yk].proposed = totProposed;
+
+    const totalLine = (v) => '$' + Number(v).toLocaleString('en-US');
+    return `<section class="year year-${yk}">
+      <div class="year-head">
+        <span class="year-chip">${esc(ym.label.toUpperCase())}</span>
+        <h2>${esc(ym.label)} Budget Modification</h2>
+        <span class="year-dates">${esc(ym.dates || '')}</span>
+        <span class="year-total">Modified budget: <strong>${esc(totalLine(totProposed))}</strong></span>
+      </div>
+      <table class="detail">
+        <thead>
+          <tr>
+            <th class="hdr-narrow">Expenditure Type<small>per original grant submission</small></th>
+            <th>Description</th>
+            <th class="num">Proposed Funds<small>current &rarr; modified</small></th>
+            <th class="num">Actuals<small>spent to date</small></th>
+            <th class="num">Fund Balance<small>entered by district</small></th>
+            <th class="num">Projections<small>to be spent by Jun 2028</small></th>
+            <th class="hdr-wide">Expenditure Updates<small>explanation / narrative</small></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" class="tot-label">${esc(ym.label)} Totals:</td>
+            <td class="num tot">${esc(totalLine(totProposed))}</td>
+            <td class="num tot">${esc(totalLine(totActuals))}</td>
+            <td class="num tot">${esc(totalLine(totBalance))}</td>
+            <td class="num tot">${esc(totalLine(totProjections))}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>`;
+  }).join('');
+
+  const varianceCls = varianceVsAward === 0 ? 'zero' : varianceVsAward > 0 ? 'up' : 'down';
+  const varianceStr = varianceVsAward === 0 ? '+$0' : (varianceVsAward > 0 ? '+' : '') + money(varianceVsAward);
+  const varianceCap = varianceVsAward === 0 ? 'Balanced to award' : (varianceVsAward > 0 ? 'Over award' : 'Under award');
+  const pageDateStr = new Date().toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'2-digit' }) + ', ' +
+    new Date().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+
+  return `<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<title>Budget Modification Request &mdash; ${districtLabel}</title>
+<style>
+  :root {
+    --brand:#0B2E4F; --brand-2:#0E5FBA; --accent:#DAA520; --ink:#0F172A;
+    --muted:#64748B; --line:#E5E7EB; --line-2:#F1F5F9;
+    --paper:#FFFFFF; --page:#FFFFFF;
+    --up:#047857; --down:#B91C1C;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; background:var(--page); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif; }
+  .page-header { display:flex; justify-content:space-between; padding:0 20px; font-size:11px; color:var(--muted); margin-bottom:6px; }
+  .page-header .title { color:var(--ink); }
+  .page { max-width:1500px; margin:0 auto; padding:0 18px; background:var(--paper); }
+  section.year { border:1px solid var(--line); border-radius:8px; padding:8px 12px 6px; margin-bottom:6px; }
+  section.year.year-y2 { border-top:3px solid var(--accent); }
+  .year-head { display:flex; align-items:baseline; gap:12px; margin-bottom:8px; flex-wrap:wrap; }
+  .year-head h2 { margin:0; font-size:15px; font-weight:700; color:var(--brand-2); letter-spacing:-.005em; }
+  .year-head .year-dates { color:var(--muted); font-size:12px; }
+  .year-head .year-total { margin-left:auto; color:var(--muted); font-size:12px; }
+  .year-head .year-total strong { color:var(--brand-2); font-weight:700; font-variant-numeric:tabular-nums; }
+  section.year-y2 .year-head h2 { color:var(--accent); }
+  section.year-y2 .year-head .year-total strong { color:var(--accent); }
+  .year-chip { background:transparent; color:var(--muted); font-size:10px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; padding:0; border:0; }
+  section.year-y2 .year-chip { color:var(--accent); }
+  section.year.year-y1 .year-chip { color:var(--brand-2); }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:left; padding:6px 8px 8px; color:var(--brand-2); font-size:9.5px; font-weight:700; letter-spacing:.10em; text-transform:uppercase; border-bottom:1px solid var(--line); vertical-align:top; }
+  thead th small { display:block; font-weight:500; font-size:8.5px; color:var(--muted); letter-spacing:.04em; text-transform:none; margin-top:2px; }
+  th.num, td.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tbody td { padding:5px 8px; border-bottom:1px solid var(--line-2); font-size:11.5px; vertical-align:middle; }
+  td.code { color:var(--brand-2); font-weight:700; width:66px; }
+  td.code .code-num { color:var(--brand-2); font-weight:700; }
+  td.code .code-num.indirect { color:var(--accent); }
+  td.desc { color:var(--ink); }
+  td.num .dollar { color:var(--muted); margin-right:2px; }
+  td.num .dim { color:var(--muted); }
+  td.upd { color:#0F172A; font-size:11px; line-height:1.35; white-space:pre-wrap; }
+  tfoot td.tot-label { padding:9px 8px; font-weight:700; color:var(--brand-2); text-align:right; }
+  tfoot td.tot { padding:9px 8px; font-weight:700; color:var(--brand-2); border-top:1px solid var(--line); font-variant-numeric:tabular-nums; }
+  section.year-y2 tfoot td.tot-label,
+  section.year-y2 tfoot td.tot { color:var(--accent); }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:6px 0 6px; }
+  .kpi { background:#FFFFFF; border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  .kpi .k { color:var(--muted); font-size:9.5px; letter-spacing:.10em; text-transform:uppercase; font-weight:700; }
+  .kpi .v { font-size:17px; font-weight:700; margin-top:3px; letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--ink); }
+  .kpi .v.up { color:var(--up); } .kpi .v.down { color:var(--down); }
+  .kpi .cap { color:var(--muted); font-size:10px; margin-top:2px; }
+  .kpi .cap.up { color:var(--up); }
+  .approved-by { border:1px solid var(--line); border-radius:8px; padding:6px 10px; }
+  .approved-by .k { color:var(--muted); font-size:9.5px; letter-spacing:.10em; text-transform:uppercase; font-weight:700; }
+  .approved-by .v { margin-top:3px; padding:5px 8px; border:1px solid var(--line); border-radius:4px; font-size:12px; min-height:20px; color:var(--ink); }
+  .foot-note { color:var(--muted); font-size:10px; margin:4px 0 0 4px; }
+  .page-footer { display:flex; justify-content:space-between; padding:6px 20px 0; font-size:10px; color:var(--muted); }
+  @page { size: 14in 8.5in; margin: 0.18in; }
+  @media print {
+    html, body { background:#FFFFFF; }
+    .page { margin:0; padding:0 12px; max-width:none; }
+  }
+</style>
+</head><body>
+<div class="page-header">
+  <span class="date">${esc(pageDateStr)}</span>
+  <span class="title">Forms &middot; Spend-Down Monitor</span>
+</div>
+<div class="page">
+  ${yearSections}
+
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="k">Total Award (Ceiling)</div>
+      <div class="v">${esc(ceiling)}</div>
+      <div class="cap">Fixed CCCCO Tier 2 grant award</div>
+    </div>
+    <div class="kpi">
+      <div class="k">Modified Project Budget</div>
+      <div class="v">${esc(money(modelTotal))}</div>
+      <div class="cap">Both years, after modifications</div>
+    </div>
+    <div class="kpi">
+      <div class="k">Variance vs Award</div>
+      <div class="v ${varianceCls}">${esc(varianceStr)}</div>
+      <div class="cap ${varianceCls}">${esc(varianceCap)}</div>
+    </div>
+    <div class="kpi">
+      <div class="k">Modified Y1 / Y2</div>
+      <div class="v">${esc(money(yearTotals.y1.proposed))} / ${esc(money(yearTotals.y2.proposed))}</div>
+      <div class="cap">Baseline ${esc(money(yearBaselineTotals.y1))} / ${esc(money(yearBaselineTotals.y2))}</div>
+    </div>
+  </div>
+
+  <div class="approved-by">
+    <div class="k">Approved by CCCCO Staff</div>
+    <div class="v">${approvedBy || ''}</div>
+  </div>
+
+  <p class="foot-note">Entries are saved automatically in this browser.</p>
+</div>
+<div class="page-footer">
+  <span>${esc(pageDateStr)}</span>
+  <span>Forms &middot; Spend-Down Monitor</span>
+</div>
+<div class="page-footer">
+  <span>https://eeo.bulleconsulting.com/dashboard</span>
+  <span>1/1</span>
+</div>
+</body></html>`;
 }
