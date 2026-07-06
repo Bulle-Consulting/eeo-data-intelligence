@@ -226,7 +226,7 @@ async function sendSubmissionEmail(env, to, record) {
   const meta = (record.state && record.state.meta) || {};
   const name = record.name || meta.district || record.district || 'District';
   const subject = 'EEO IBP Grant Initiative — New Submission — ' + name + (meta.date ? ' (' + meta.date + ')' : '');
-  const from = env.MAIL_FROM || 'noreply@bulleconsulting.com';
+  const from = env.MAIL_FROM || env.SENDER_ADDR || 'noreply@bulleconsulting.com';
 
   // Email body is the notification message; the completed form is attached.
   const text = MESSAGE_LINES.join('\n');
