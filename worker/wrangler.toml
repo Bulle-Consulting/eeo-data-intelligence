@@ -1,0 +1,26 @@
+name = "bmr-sync"
+main = "bmr-sync.js"
+compatibility_date = "2024-11-01"
+
+# KV store for BMR records. The binding name must be BMR_STATE (the code reads
+# env.BMR_STATE), and the id is the "BMR_STATE" namespace the live Worker
+# already uses — so a redeploy keeps every existing district record.
+kv_namespaces = [
+  { binding = "BMR_STATE", id = "70572b343c08400cb6a79cc9aa8db40f" }
+]
+
+# Native Cloudflare Email Service send binding — no third-party API key.
+# No restriction attribute = can send to any recipient once a sending domain
+# is onboarded to Email Service (Compute > Email Service).
+send_email = [
+  { name = "EMAIL" }
+]
+
+[vars]
+# Sender address on a domain onboarded to Cloudflare Email Service.
+MAIL_FROM = "noreply@bulleconsulting.com"
+# Default recipients (the request body may override these).
+SUBMIT_TO = "eeosubmissions@cccco.edu,admin@bulleconsulting.com"
+
+# Optional fallback provider — only needed if you don't use the EMAIL binding.
+# RESEND_API_KEY is a SECRET: npx wrangler secret put RESEND_API_KEY
