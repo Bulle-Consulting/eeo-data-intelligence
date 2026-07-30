@@ -1,0 +1,17 @@
+name = "eeo-rpt-sync"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Optional KV store for the legacy /bmr routes. The code guards every use of
+# BMR_KV, so the Worker runs fine without this binding. To enable it, create a
+# namespace (npx wrangler kv namespace create BMR_KV) and uncomment:
+# kv_namespaces = [
+#   { binding = "BMR_KV", id = "<namespace-id>" }
+# ]
+
+# REQUIRED SECRET (set once; survives future deploys):
+#   npx wrangler secret put RESEND_API_KEY
+# Without it, every submission returns
+#   { ok:false, error:"no RESEND_API_KEY configured" }
+# and no email is sent (the dashboards then fall back to the staff member's
+# own mail app). The same Resend key used by the bmr-sync Worker works here.
