@@ -2,9 +2,16 @@ name = "bmr-sync"
 main = "bmr-sync.js"
 compatibility_date = "2024-11-01"
 
-# KV store for BMR records (namespace "BMR", created in the Cloudflare account).
+# KV store for BMR records. The binding name must be BMR_STATE (the code reads
+# env.BMR_STATE). The id below is the "BMR_STATE" namespace verified against the
+# Cloudflare account on 2026-07-30. Before deploying, confirm it still matches
+# the namespace holding the district records:
+#   npx wrangler kv namespace list        # look for the "BMR_STATE" entry
+# Pointing this at a different namespace would make existing records appear
+# missing. To create the namespace fresh in a new account:
+#   npx wrangler kv namespace create BMR_STATE
 kv_namespaces = [
-  { binding = "BMR", id = "ea1d30cbc3b9449ebdaaca8177a8e334" }
+  { binding = "BMR_STATE", id = "70572b343c08400cb6a79cc9aa8db40f" }
 ]
 
 # Native Cloudflare Email Service send binding — no third-party API key.
