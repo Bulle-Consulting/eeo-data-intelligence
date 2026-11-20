@@ -1,3 +1,6 @@
+# WARNING: this file does not match the live bmr-sync Worker. The code reads
+# KV "BMR_STATE" and the secrets RESEND_API_KEY, SENDER_ADDR and CF_API_TOKEN.
+# Deploying with this file would break the Worker. Use deploy-bmr-sync.sh.
 name = "bmr-sync"
 main = "bmr-sync.js"
 compatibility_date = "2024-11-01"

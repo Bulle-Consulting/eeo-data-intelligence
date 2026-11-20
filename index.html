@@ -2356,14 +2356,18 @@ function bmruFmtDate(iso) {
   return isNaN(t) ? '' : new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-// This page is public, so keep only what the tab shows: whether the district
-// submitted and when. Names, emails, phone numbers and the form itself are
-// dropped here and never reach the page.
+// The tab shows only whether the district submitted and when. The BMR sync
+// service returns just that ({ submitted, submittedAt }); a reply that still
+// carries a whole record (an older service) is reduced to the same two facts.
 function bmruSummary(d) {
-  // A submission carries submittedAt and, as the district form requires, a
-  // submitter; drafts and empty test records count as "No submission yet".
-  const meta = (d && d.state && d.state.meta) || {};
-  const submitted = !!(d && (d.submitted || d.submittedAt) && String(meta.submittedBy || '').trim() && d.baseline && d.model);
+  let submitted;
+  if (d && typeof d.submitted === 'boolean' && !d.state) submitted = d.submitted;
+  else {
+    // A submission carries submittedAt and, as the district form requires, a
+    // submitter; drafts and empty test records count as "No submission yet".
+    const meta = (d && d.state && d.state.meta) || {};
+    submitted = !!(d && (d.submitted || d.submittedAt) && String(meta.submittedBy || '').trim() && d.baseline && d.model);
+  }
   return { submitted, submittedAt: submitted ? bmruFmtDate(d.submittedAt) : '' };
 }
 
