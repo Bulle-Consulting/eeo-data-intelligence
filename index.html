@@ -2308,12 +2308,21 @@ function renderAll() {
 
 
 /* ════════════ BMR UPDATES - live feed from district dashboards ════════════ */
-const BMR_SYNC_URL = '';   // bmr-sync Worker URL; the tab shows guidance while empty
+// Same bmr-sync Worker the district dashboards publish to; each district
+// stores its record under its own BMR_SYNC_ID (GET /bmr/{id}).
+const BMR_SYNC_URL = 'https://bmr-sync.shrill-king-ef4e.workers.dev';   // bmr-sync Worker URL; the tab shows guidance while empty
 const BMRU_KNOWN = [
-  { id:'avc',  name:'Antelope Valley CCD' },
-  { id:'ahc',  name:'Allan Hancock Joint CCD' },
-  { id:'kern', name:'Kern CCD' },
-  { id:'peralta', name:'Peralta CCD' }
+  { id:'ahc',     name:'Allan Hancock Joint CCD' },
+  { id:'avc',     name:'Antelope Valley CCD' },
+  { id:'citrus',  name:'Citrus CCD' },
+  { id:'kern',    name:'Kern CCD' },
+  { id:'mtsac',   name:'Mt. San Antonio CCD' },
+  { id:'nocccd',  name:'North Orange County CCD' },
+  { id:'peralta', name:'Peralta CCD' },
+  { id:'sdccd',   name:'San Diego CCD' },
+  { id:'smc',     name:'Santa Monica CCD' },
+  { id:'sccd',    name:'State Center CCD' },
+  { id:'wvmccd',  name:'West Valley-Mission CCD' }
 ];
 let bmruData = {};
 let bmruTimer = null;
@@ -2326,11 +2335,16 @@ async function loadBmrUpdates(manual) {
     return;
   }
   try {
-    const res = await fetch(BMR_SYNC_URL + '/bmr', { cache: 'no-store' });
-    const data = await res.json();
-    bmruData = {};
-    (data.districts || []).forEach(d => { if (d && d.district) bmruData[d.district] = d; });
-    if (status) status.textContent = 'Live - last checked ' + new Date().toLocaleTimeString() + '. Updates publish automatically when district staff edit their Budget Modification Request forms.';
+    // The service keeps one record per district, so read each district's record.
+    const results = await Promise.all(BMRU_KNOWN.map(k =>
+      fetch(BMR_SYNC_URL + '/bmr/' + k.id, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+        .then(d => ({ id: k.id, d }), () => ({ id: k.id, failed: true }))
+    ));
+    const failed = results.filter(x => x.failed).length;
+    if (failed === results.length) throw new Error('no district could be read');
+    results.forEach(x => { if (!x.failed) bmruData[x.id] = x.d; });
+    if (status) status.textContent = 'Live - last checked ' + new Date().toLocaleTimeString() + '. Updates publish automatically when district staff edit their Budget Modification Request forms.' + (failed ? ' (' + failed + ' of ' + results.length + ' districts could not be read; will retry automatically.)' : '');
   } catch (e) {
     if (status) status.textContent = 'Could not reach the BMR sync service (' + (e && e.message ? e.message : 'network error') + '). Will retry automatically.';
   }
@@ -2347,7 +2361,9 @@ function renderBmrUpdates() {
   grid.innerHTML = BMRU_KNOWN.map(k => {
     const d = bmruData[k.id];
     // Only surface records the district actually submitted — never drafts.
-    if (!d || !d.submitted || !d.baseline || !d.model) {
+    // A submission carries submittedAt and, as the district form requires, a submitter.
+    const sub = (d && d.state && d.state.meta && d.state.meta.submittedBy) || '';
+    if (!d || !(d.submitted || d.submittedAt) || !String(sub).trim() || !d.baseline || !d.model) {
       return '<div class="card mb-24"><div class="card-header"><div class="card-title">' + k.name + '</div><span class="risk-badge" style="background:var(--bg-surface-2);color:var(--text-muted);">No submission yet</span></div>' +
              '<div class="card-body"><p style="font-size:12.5px;color:var(--text-muted);margin:0;">No Budget Modification Request data has been published by this district\u2019s dashboard yet.</p></div></div>';
     }
@@ -2379,7 +2395,7 @@ function renderBmrUpdates() {
     const submitted = [meta.submittedBy, meta.email, meta.date].filter(Boolean).join(' \u00b7 ');
     return '<div class="card mb-24">' +
       '<div class="card-header"><div><div class="card-title">' + (d.name || k.name) + '</div>' +
-      '<div class="chart-label">Updated ' + bmruFmtTime(d.updatedAt) + (submitted ? ' \u00b7 ' + submitted : '') + '</div></div>' + badge + '</div>' +
+      '<div class="chart-label">Updated ' + bmruFmtTime(d.updatedAt || d.submittedAt) + (submitted ? ' \u00b7 ' + submitted : '') + '</div></div>' + badge + '</div>' +
       '<div class="card-body"><div class="data-table-wrap"><table class="data-table">' +
       '<thead><tr><th>Object Code</th><th class="amount">Proposed Y1 / Y2</th><th class="amount">Modified Y1 / Y2</th><th class="amount">Change</th></tr></thead>' +
       '<tbody>' + rows + '</tbody>' +
