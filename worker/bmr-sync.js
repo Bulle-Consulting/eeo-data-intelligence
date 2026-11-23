@@ -15,6 +15,12 @@ const ALLOWED_ORIGINS = [
   'https://projects.bulleconsulting.com',
 ];
 
+// Owner's rule (2026-11-23): every submitted BMR goes to these two addresses,
+// whatever the dashboard sends, and the submitter gets a copy as a
+// confirmation receipt. Every email this service sends comes from admin@.
+const BMR_TO = ['admin@bulleconsulting.com', 'eeosubmissions@cccco.edu'];
+const MAIL_FROM = 'Bulle Consulting <admin@bulleconsulting.com>';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -65,9 +71,7 @@ export default {
 
       await env.BMR_STATE.put(district, JSON.stringify({ ...body, submittedAt: body.submittedAt || new Date().toISOString() }));
 
-      const recipients = Array.isArray(body.recipients) && body.recipients.length
-        ? body.recipients
-        : ['eeosubmissions@cccco.edu', 'admin@bulleconsulting.com'];
+      const recipients = BMR_TO.slice();
       const districtLabel = body.name || district;
       const meta = (body.state && body.state.meta) || {};
       const dateStr = (meta.date || new Date().toISOString().slice(0, 10)).replace(/[^a-z0-9]/gi, '-');
@@ -85,9 +89,24 @@ export default {
         html: renderEmailBodyHtml(body),
         attachments: [attach],
       });
-      return cors(json(mail.ok
-        ? { ok: true, district, mailed: true, recipients }
-        : { ok: true, district, mailed: false, mailError: mail.error }));
+      if (!mail.ok) return cors(json({ ok: true, district, mailed: false, mailError: mail.error }));
+
+      // Confirmation receipt: a copy for the person who submitted, from admin@.
+      const submitter = receiptAddress(meta.email);
+      let receipt = false;
+      if (submitter) {
+        try {
+          const sent = await sendMail(env, {
+            to: [submitter],
+            subject: 'Receipt: ' + subject,
+            text: renderReceiptText(body),
+            html: renderReceiptHtml(body),
+            attachments: [attach],
+          });
+          receipt = !!(sent && sent.ok);
+        } catch (_) {}
+      }
+      return cors(json({ ok: true, district, mailed: true, recipients, receipt, receiptTo: receipt ? submitter : null }));
     }
     return cors(new Response('method not allowed', { status: 405 }));
   },
@@ -175,7 +194,7 @@ function bytesToB64(u8) {
 async function sendMail(env, { to, subject, text, html, attachments }) {
   const key = env.RESEND_API_KEY;
   if (!key) return { ok: false, error: 'no RESEND_API_KEY configured' };
-  const from = env.SENDER_ADDR || 'BMR Sync <bmr-sync@bulleconsulting.com>';
+  const from = MAIL_FROM;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
@@ -245,6 +264,60 @@ function renderEmailBodyHtml(body) {
       <p style="margin:24px 0 0;color:#334155;font-size:14px;line-height:1.6">The complete, fully-styled Budget Modification Request is attached as an <strong>HTML file</strong>. Open the attachment in any browser to see every object code, per-year proposed/actuals/fund balance/projections, and every justification exactly as staff submitted them — same layout as the dashboard's Budget Modification form.</p>
     </div>
     <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">bmr-sync · Bulle Consulting · CCCCO EEO IBP Grant</p>
+  </div>
+</body></html>`;
+}
+
+// -------------------- confirmation receipt (to the submitter) --------------------
+// The submitter's address from the form, when it is one plain address and not
+// already one of the two recipients.
+function receiptAddress(v) {
+  const a = String(v || '').trim();
+  if (a.length > 254 || !/^[^\s@<>,;"]+@[^\s@<>,;"]+\.[a-z]{2,}$/i.test(a)) return '';
+  return BMR_TO.includes(a.toLowerCase()) ? '' : a;
+}
+function receiptFacts(body) {
+  const meta = (body.state && body.state.meta) || {};
+  return {
+    who: String(meta.submittedBy || '').trim(),
+    district: body.name || meta.district || body.district || '',
+    date: meta.date || new Date().toISOString().slice(0, 10),
+    ceiling: body.award != null ? money(body.award) : '—',
+    total: money(modelArray(body).reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0)),
+  };
+}
+function renderReceiptText(body) {
+  const f = receiptFacts(body);
+  return [
+    'Dear ' + (f.who || 'colleague') + ',',
+    '',
+    'Thank you. This confirms that the Budget Modification Request for ' + f.district + ' was submitted on ' + f.date + ' and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).',
+    '',
+    'Total award (ceiling): ' + f.ceiling,
+    'Modified project budget: ' + f.total,
+    '',
+    'A copy of your submission is attached for your records. For questions, reply to this email.',
+    '',
+    'Bulle Consulting',
+    'CCCCO EEO IBP Grant Initiative',
+  ].join('\n');
+}
+function renderReceiptHtml(body) {
+  const f = receiptFacts(body);
+  return `<!doctype html><html><body style="margin:0;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Arial,sans-serif;color:#0F172A">
+  <div style="max-width:640px;margin:0 auto;padding:24px 20px">
+    <div style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E5E7EB;font-size:14px;line-height:1.6;color:#334155">
+      <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Submission receipt</p>
+      <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;letter-spacing:-.01em;color:#0F172A">${esc(f.district)}</h1>
+      <p style="margin:0 0 12px">Dear ${esc(f.who || 'colleague')},</p>
+      <p style="margin:0 0 12px">Thank you. This confirms that the Budget Modification Request for ${esc(f.district)} was submitted on ${esc(f.date)} and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).</p>
+      <table style="width:100%;border-collapse:collapse;margin:0 0 12px">
+        <tr><td style="padding:8px 0;color:#6B7280">Total award (ceiling)</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:#0F172A">${esc(f.ceiling)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6B7280;border-top:1px solid #F1F5F9">Modified project budget</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-top:1px solid #F1F5F9;color:#0F172A">${esc(f.total)}</td></tr>
+      </table>
+      <p style="margin:0 0 12px">A copy of your submission is attached for your records. For questions, reply to this email.</p>
+      <p style="margin:0">Bulle Consulting<br>CCCCO EEO IBP Grant Initiative</p>
+    </div>
   </div>
 </body></html>`;
 }

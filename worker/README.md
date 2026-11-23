@@ -36,6 +36,17 @@ to point its `BMR_SYNC_URL` at this one Worker; no per-district Worker changes,
 redeploys, or new infrastructure are required. Add a district by deploying its
 dashboard with a unique `BMR_SYNC_ID` and the shared `BMR_SYNC_URL`.
 
+**Who gets what (owner's rule, 2026-11-23).** When any district submits:
+
+- the BMR goes to `admin@bulleconsulting.com` and `eeosubmissions@cccco.edu`,
+  whatever list the dashboard sends (`BMR_TO` in `bmr-sync.js`);
+- the person who submitted gets a copy as a confirmation receipt
+  ("Receipt: Budget Modification Request — …"), with the same attachment, sent
+  to the email typed in the form. No receipt when that field is empty, holds
+  more than one address, or is one of the two addresses above;
+- every email the service sends is from `Bulle Consulting <admin@bulleconsulting.com>`
+  (`MAIL_FROM`), so replies reach a real inbox.
+
 Every submission email has a short summary in the message (district,
 submitter, award ceiling, modified budget) and the **full form attached as a
 PDF** (`BMR-<district>-<date>.pdf`), or as an HTML file when the PDF can't be
@@ -47,10 +58,9 @@ to CCCCO.
 
 ## Email sender
 
-Email is sent by `sendMail()` through Resend (`RESEND_API_KEY` secret, sender
-from the `SENDER_ADDR` secret). The PDF is rendered by Cloudflare Browser
-Rendering (`CF_API_TOKEN` secret). Recipients come from the submitted form,
-falling back to `eeosubmissions@cccco.edu` and `admin@bulleconsulting.com`.
+Email is sent by `sendMail()` through Resend (`RESEND_API_KEY` secret) from
+`MAIL_FROM`; the old `SENDER_ADDR` secret is no longer used. The PDF is
+rendered by Cloudflare Browser Rendering (`CF_API_TOKEN` secret).
 
 ## Deploy
 
