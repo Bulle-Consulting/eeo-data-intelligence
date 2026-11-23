@@ -14,7 +14,7 @@ cd "$(dirname "$0")"
 W="${WRANGLER:-npx --yes wrangler@4.86.0}"   # WRANGLER is for testing only
 URL="https://bmr-sync.shrill-king-ef4e.workers.dev"
 TAB="https://bulle-consulting.github.io/eeo-data-intelligence/"
-PREVIOUS=dc7ac00   # the commit whose bmr-sync.js is live (deployed 2026-11-23)
+PREVIOUS=80c199f   # the commit whose bmr-sync.js is live (deployed 2026-11-23)
 
 # 1. The BMR Updates tab must already read the new reply, or it would show
 #    every district as "No submission yet".
