@@ -15,10 +15,11 @@ const ALLOWED_ORIGINS = [
   'https://projects.bulleconsulting.com',
 ];
 
-// Owner's rule (2026-11-23): every submitted BMR goes to these two addresses,
+// Owner's rule (2026-11-23): every submitted BMR goes to these addresses,
 // whatever the dashboard sends, and the submitter gets a copy as a
 // confirmation receipt. Every email this service sends comes from admin@.
-const BMR_TO = ['admin@bulleconsulting.com', 'eeosubmissions@cccco.edu'];
+// Dr. Jonathan Locust (CCCCO) added at CCCCO's request of 2026-08-27.
+const BMR_TO = ['admin@bulleconsulting.com', 'eeosubmissions@cccco.edu', 'jlocust@cccco.edu'];
 const MAIL_FROM = 'Bulle Consulting <admin@bulleconsulting.com>';
 
 export default {
@@ -291,7 +292,7 @@ function renderReceiptText(body) {
   return [
     'Dear ' + (f.who || 'colleague') + ',',
     '',
-    'Thank you. This confirms that the Budget Modification Request for ' + f.district + ' was submitted on ' + f.date + ' and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).',
+    'Thank you. This confirms that the Budget Modification Request for ' + f.district + ' was submitted on ' + f.date + ' and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).',
     '',
     'Total award (ceiling): ' + f.ceiling,
     'Modified project budget: ' + f.total,
@@ -310,7 +311,7 @@ function renderReceiptHtml(body) {
       <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Submission receipt</p>
       <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;letter-spacing:-.01em;color:#0F172A">${esc(f.district)}</h1>
       <p style="margin:0 0 12px">Dear ${esc(f.who || 'colleague')},</p>
-      <p style="margin:0 0 12px">Thank you. This confirms that the Budget Modification Request for ${esc(f.district)} was submitted on ${esc(f.date)} and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).</p>
+      <p style="margin:0 0 12px">Thank you. This confirms that the Budget Modification Request for ${esc(f.district)} was submitted on ${esc(f.date)} and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).</p>
       <table style="width:100%;border-collapse:collapse;margin:0 0 12px">
         <tr><td style="padding:8px 0;color:#6B7280">Total award (ceiling)</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:#0F172A">${esc(f.ceiling)}</td></tr>
         <tr><td style="padding:8px 0;color:#6B7280;border-top:1px solid #F1F5F9">Modified project budget</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-top:1px solid #F1F5F9;color:#0F172A">${esc(f.total)}</td></tr>

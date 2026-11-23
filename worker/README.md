@@ -38,8 +38,9 @@ dashboard with a unique `BMR_SYNC_ID` and the shared `BMR_SYNC_URL`.
 
 **Who gets what (owner's rule, 2026-11-23).** When any district submits:
 
-- the BMR goes to `admin@bulleconsulting.com` and `eeosubmissions@cccco.edu`,
-  whatever list the dashboard sends (`BMR_TO` in `bmr-sync.js`);
+- the BMR goes to `admin@bulleconsulting.com`, `eeosubmissions@cccco.edu` and
+  `JLocust@cccco.edu` (Dr. Jonathan Locust, CCCCO, added 2026-11-23 at CCCCO's
+  request), whatever list the dashboard sends (`BMR_TO` in `bmr-sync.js`);
 - the person who submitted gets a copy as a confirmation receipt
   ("Receipt: Budget Modification Request — …"), with the same attachment, sent
   to the email typed in the form. No receipt when that field is empty, holds
