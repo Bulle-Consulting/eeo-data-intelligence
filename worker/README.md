@@ -36,10 +36,14 @@ to point its `BMR_SYNC_URL` at this one Worker; no per-district Worker changes,
 redeploys, or new infrastructure are required. Add a district by deploying its
 dashboard with a unique `BMR_SYNC_ID` and the shared `BMR_SYNC_URL`.
 
-Every submission email includes the **full form as an HTML attachment**
-(`Budget_Modification_<district>_<date>.html`) containing every section —
-meta, both years with complete justifications, and the reconciliation summary —
-so nothing is ever clipped.
+Every submission email has a short summary in the message (district,
+submitter, award ceiling, modified budget) and the **full form attached as a
+PDF** (`BMR-<district>-<date>.pdf`), or as an HTML file when the PDF can't be
+rendered, so nothing is ever clipped.
+
+The first save of a drafting session (no activity for 24 hours) also emails a
+short "[BMR draft started]" notice to `admin@bulleconsulting.com` only, never
+to CCCCO.
 
 ## Email sender
 

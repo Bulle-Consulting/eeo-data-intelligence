@@ -3,10 +3,27 @@
 // of the form (matching the dashboard's Budget Modification tab) to
 // CCCCO + Bulle admin via Resend.
 
+// Who may use this service from a browser: the published origins of the 11
+// district dashboards and the EEO Data Intelligence Dashboard, plus the EEO
+// Dashboard itself. Only these get CORS headers, and only these may save or
+// submit (PUT / POST). An Origin header can be forged outside a browser, so
+// this stops other websites, not a person with command-line tools.
+const ALLOWED_ORIGINS = [
+  'https://wardere83.github.io',        // 10 district dashboards
+  'https://bulle-consulting.github.io', // Kern CCD + EEO Data Intelligence Dashboard
+  'https://eeo.bulleconsulting.com',    // EEO Dashboard
+  'https://projects.bulleconsulting.com',
+];
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
+    const origin = request.headers.get('origin') || '';
+    const allowed = ALLOWED_ORIGINS.includes(origin);
+    const cors = (res) => withCors(res, allowed ? origin : '');
+    if (request.method === 'OPTIONS') {
+      return allowed ? cors(new Response(null, { status: 204 })) : new Response('forbidden', { status: 403, headers: { vary: 'Origin' } });
+    }
     if (url.pathname === '/health') return cors(new Response('ok', { status: 200 }));
 
     const m = url.pathname.match(/^\/bmr\/([a-z0-9-]{1,32})(?:\/(submit))?$/i);
@@ -14,9 +31,17 @@ export default {
     const district = m[1].toLowerCase();
     const isSubmit = m[2] === 'submit';
 
+    // Public read: only whether the district has submitted and when. No
+    // caller reads a record back (the forms keep their drafts in the
+    // browser), so names, emails, phones, the form and the PDF never leave.
     if (request.method === 'GET' && !isSubmit) {
       const stored = await env.BMR_STATE.get(district, 'json');
-      return cors(json(stored || { district, empty: true }));
+      const res = json(publicStatus(stored));
+      res.headers.set('cache-control', 'no-store');
+      return cors(res);
+    }
+    if ((request.method === 'PUT' || request.method === 'POST') && !allowed) {
+      return new Response('forbidden', { status: 403, headers: { vary: 'Origin' } });
     }
     if (request.method === 'PUT' && !isSubmit) {
       const body = await safeJson(request);
@@ -69,12 +94,25 @@ export default {
 };
 
 // -------------------- utils --------------------
-function cors(res) {
+// CORS for an allowed origin only; any other site's browser can't read the reply.
+function withCors(res, origin) {
   const h = new Headers(res.headers);
-  h.set('access-control-allow-origin', '*');
-  h.set('access-control-allow-methods', 'GET,PUT,POST,OPTIONS');
-  h.set('access-control-allow-headers', 'content-type');
+  h.set('vary', 'Origin');
+  if (origin) {
+    h.set('access-control-allow-origin', origin);
+    h.set('access-control-allow-methods', 'GET,PUT,POST,OPTIONS');
+    h.set('access-control-allow-headers', 'content-type');
+  }
   return new Response(res.body, { status: res.status, headers: h });
+}
+// What GET /bmr/{district} returns. A district counts as submitted only when
+// its record is a real submission (submitted with a submitter and a budget),
+// the rule the BMR Updates tab used; drafts and test records are not.
+function publicStatus(stored) {
+  const meta = (stored && stored.state && stored.state.meta) || {};
+  const submitted = !!(stored && (stored.submitted || stored.submittedAt) &&
+    String(meta.submittedBy || '').trim() && stored.baseline && stored.model);
+  return { submitted, submittedAt: submitted && stored.submittedAt ? String(stored.submittedAt) : null };
 }
 function json(v) { return new Response(JSON.stringify(v), { headers: { 'content-type': 'application/json' } }); }
 async function safeJson(request) { try { return await request.json(); } catch { return null; } }
