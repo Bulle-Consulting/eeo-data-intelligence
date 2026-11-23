@@ -36,8 +36,20 @@ MAIN=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1
 LIVE="$TMP/bmr-sync/$MAIN"
 
 # 4. Stop if someone changed the live Worker outside this repository.
+#    Cloudflare hands back the bundled code a deploy uploaded, so compare the
+#    live code with the source and with the source bundled the same way.
 git show "$PREVIOUS:worker/bmr-sync.js" > "$TMP/previous.js"
-if ! diff -qw "$TMP/previous.js" "$LIVE" >/dev/null && ! diff -qw bmr-sync.js "$LIVE" >/dev/null; then
+bundle() {   # bundle <source> <out dir>: the code `wrangler deploy` would upload
+  mkdir -p "$2/src" && cp "$CONF" "$2/wrangler.jsonc" && cp "$1" "$2/src/$(basename "$MAIN")"
+  (cd "$2" && $W deploy --dry-run --outdir out --config wrangler.jsonc >/dev/null 2>&1) &&
+    grep -v sourceMappingURL "$2/out/$(basename "$MAIN")"
+}
+grep -v sourceMappingURL "$LIVE" > "$TMP/live.js"
+matches() {  # matches <source>: the live code is this source, raw or bundled
+  diff -qw "$1" "$LIVE" >/dev/null && return 0
+  rm -rf "$TMP/b" && bundle "$1" "$TMP/b" > "$TMP/bundled.js" && diff -q "$TMP/bundled.js" "$TMP/live.js" >/dev/null
+}
+if ! matches "$TMP/previous.js" && ! matches bmr-sync.js; then
   if [ "${FORCE:-}" != "1" ]; then
     diff -uw "$TMP/previous.js" "$LIVE" > "$TMP/live-changes.diff" || true
     echo "Stop: the live Worker differs from this repository's last deployed version:" >&2
