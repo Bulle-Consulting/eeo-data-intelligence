@@ -1,51 +1,12 @@
 // bmr-sync — Cloudflare Worker for Budget Modification Request submissions.
-// Persists BMR state in KV; on submit emails the EEO IBP notification message
-// with the completed form attached as BOTH an HTML document and a PDF.
-
-// Notification message shown in the email body (form goes out as attachments).
-const SUBMISSION_MESSAGE_TEXT = [
-  'Dear EEO IBP Grant Initiative Team,',
-  '',
-  'A new submission has been received through the EEO IBP Grant Initiative Dashboard. The completed form and supporting documents are attached to this message.',
-  '',
-  'Please review the submitted materials to confirm they are complete and consistent with current EEO IBP Grant reporting and documentation requirements. If additional information or clarification is needed, contact the submitter using the information provided in the form.',
-  '',
-  'For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.',
-].join('\n');
-
-const SUBMISSION_MESSAGE_HTML = `<!doctype html><html><body style="margin:0;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Arial,sans-serif;color:#0F172A">
-  <div style="max-width:640px;margin:0 auto;padding:24px 20px">
-    <div style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E5E7EB;font-size:14px;line-height:1.6;color:#334155">
-      <p style="margin:0 0 12px">Dear EEO IBP Grant Initiative Team,</p>
-      <p style="margin:0 0 12px">A new submission has been received through the EEO IBP Grant Initiative Dashboard. The completed form and supporting documents are attached to this message.</p>
-      <p style="margin:0 0 12px">Please review the submitted materials to confirm they are complete and consistent with current EEO IBP Grant reporting and documentation requirements. If additional information or clarification is needed, contact the submitter using the information provided in the form.</p>
-      <p style="margin:0">For questions about this submission or any technical issues with the dashboard or attachments, please contact the Bulle team.</p>
-    </div>
-    <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">bmr-sync · Bulle Consulting · CCCCO EEO IBP Grant</p>
-  </div>
-</body></html>`;
-
-// Who may use this service from a browser: the published origins of the 11
-// district dashboards and the EEO Data Intelligence Dashboard, plus the EEO
-// Dashboard itself. Only these get CORS headers, and only these may save or
-// submit (PUT / POST). An Origin header can be forged outside a browser, so
-// this stops other websites, not a person with command-line tools.
-const ALLOWED_ORIGINS = [
-  'https://wardere83.github.io',        // 10 district dashboards
-  'https://bulle-consulting.github.io', // Kern CCD + EEO Data Intelligence Dashboard
-  'https://eeo.bulleconsulting.com',    // EEO Dashboard
-  'https://projects.bulleconsulting.com',
-];
+// Persists BMR state in KV; on submit emails a fully-styled HTML rendering
+// of the form (matching the dashboard's Budget Modification tab) to
+// CCCCO + Bulle admin via Resend.
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const origin = request.headers.get('origin') || '';
-    const allowed = ALLOWED_ORIGINS.includes(origin);
-    const cors = (res) => withCors(res, allowed ? origin : '');
-    if (request.method === 'OPTIONS') {
-      return allowed ? cors(new Response(null, { status: 204 })) : new Response('forbidden', { status: 403, headers: { vary: 'Origin' } });
-    }
+    if (request.method === 'OPTIONS') return cors(new Response(null, { status: 204 }));
     if (url.pathname === '/health') return cors(new Response('ok', { status: 200 }));
 
     const m = url.pathname.match(/^\/bmr\/([a-z0-9-]{1,32})(?:\/(submit))?$/i);
@@ -53,23 +14,25 @@ export default {
     const district = m[1].toLowerCase();
     const isSubmit = m[2] === 'submit';
 
-    // Public read: only whether the district has submitted and when. No
-    // caller reads a record back (the forms keep their drafts in the
-    // browser), so names, emails, phones, the form and the PDF never leave.
     if (request.method === 'GET' && !isSubmit) {
       const stored = await env.BMR_STATE.get(district, 'json');
-      const res = json(publicStatus(stored));
-      res.headers.set('cache-control', 'no-store');
-      return cors(res);
-    }
-    if ((request.method === 'PUT' || request.method === 'POST') && !allowed) {
-      return new Response('forbidden', { status: 403, headers: { vary: 'Origin' } });
+      return cors(json(stored || { district, empty: true }));
     }
     if (request.method === 'PUT' && !isSubmit) {
       const body = await safeJson(request);
       if (!body) return cors(new Response('invalid json', { status: 400 }));
-      await env.BMR_STATE.put(district, JSON.stringify({ ...body, updatedAt: new Date().toISOString() }));
-      return cors(json({ ok: true, district }));
+      const prevDraft = await env.BMR_STATE.get(district, 'json').catch(() => null);
+      const nowIso = new Date().toISOString();
+      const draftDue = draftNotifyDue(prevDraft, Date.parse(nowIso));
+      await env.BMR_STATE.put(district, JSON.stringify({ ...body, updatedAt: nowIso, firstDraftAt: draftDue ? nowIso : (prevDraft && prevDraft.firstDraftAt) || nowIso }));
+      let notified = false;
+      if (draftDue) {
+        try {
+          const sent = await notifyDraftStarted(env, 'bmr', district, body, nowIso);
+          notified = !!(sent && sent.ok);
+        } catch (_) {}
+      }
+      return cors(json({ ok: true, district, notified }));
     }
     if (request.method === 'POST' && isSubmit) {
       const body = await safeJson(request);
@@ -83,28 +46,22 @@ export default {
       const districtLabel = body.name || district;
       const meta = (body.state && body.state.meta) || {};
       const dateStr = (meta.date || new Date().toISOString().slice(0, 10)).replace(/[^a-z0-9]/gi, '-');
-      const subject = `EEO IBP Grant Initiative — New Submission — ${districtLabel}${meta.date ? ' (' + meta.date + ')' : ''}`;
+      const subject = `Budget Modification Request — ${districtLabel}${meta.date ? ' (' + meta.date + ')' : ''}`;
       const formHtml = renderFormHtml(body);
       const pdfBytes = await renderPdfFromHtml(env, formHtml);
-
-      // Attach BOTH the HTML document and (when the PDF renders) the PDF.
-      const stem = safeFilename(`Budget_Modification_Request-${districtLabel}-${dateStr}`);
-      const attachments = [
-        { filename: stem + '.html', content: b64(formHtml), content_type: 'text/html' },
-      ];
-      if (pdfBytes) {
-        attachments.push({ filename: stem + '.pdf', content: bytesToB64(pdfBytes), content_type: 'application/pdf' });
-      }
+      const attach = pdfBytes
+        ? { filename: safeFilename(`BMR-${districtLabel}-${dateStr}.pdf`), content: bytesToB64(pdfBytes), content_type: 'application/pdf' }
+        : { filename: safeFilename(`BMR-${districtLabel}-${dateStr}.html`), content: b64(formHtml), content_type: 'text/html' };
 
       const mail = await sendMail(env, {
         to: recipients,
         subject,
-        text: SUBMISSION_MESSAGE_TEXT,
-        html: SUBMISSION_MESSAGE_HTML,
-        attachments,
+        text: renderTextBody(body),
+        html: renderEmailBodyHtml(body),
+        attachments: [attach],
       });
       return cors(json(mail.ok
-        ? { ok: true, district, mailed: true, recipients, attachments: attachments.map(a => a.filename) }
+        ? { ok: true, district, mailed: true, recipients }
         : { ok: true, district, mailed: false, mailError: mail.error }));
     }
     return cors(new Response('method not allowed', { status: 405 }));
@@ -112,25 +69,12 @@ export default {
 };
 
 // -------------------- utils --------------------
-// CORS for an allowed origin only; any other site's browser can't read the reply.
-function withCors(res, origin) {
+function cors(res) {
   const h = new Headers(res.headers);
-  h.set('vary', 'Origin');
-  if (origin) {
-    h.set('access-control-allow-origin', origin);
-    h.set('access-control-allow-methods', 'GET,PUT,POST,OPTIONS');
-    h.set('access-control-allow-headers', 'content-type');
-  }
+  h.set('access-control-allow-origin', '*');
+  h.set('access-control-allow-methods', 'GET,PUT,POST,OPTIONS');
+  h.set('access-control-allow-headers', 'content-type');
   return new Response(res.body, { status: res.status, headers: h });
-}
-// What GET /bmr/{district} returns. A district counts as submitted only when
-// its record is a real submission (submitted with a submitter and a budget),
-// the rule the BMR Updates tab used; drafts and test records are not.
-function publicStatus(stored) {
-  const meta = (stored && stored.state && stored.state.meta) || {};
-  const submitted = !!(stored && (stored.submitted || stored.submittedAt) &&
-    String(meta.submittedBy || '').trim() && stored.baseline && stored.model);
-  return { submitted, submittedAt: submitted && stored.submittedAt ? String(stored.submittedAt) : null };
 }
 function json(v) { return new Response(JSON.stringify(v), { headers: { 'content-type': 'application/json' } }); }
 async function safeJson(request) { try { return await request.json(); } catch { return null; } }
@@ -220,7 +164,7 @@ function modelArray(body) {
 }
 const YEAR_META_DEFAULT = { y1: { label: 'Year 1', dates: '' }, y2: { label: 'Year 2', dates: '' } };
 
-// -------------------- text summary (retained; unused for the email body) --------------------
+// -------------------- text summary (email plain-text body) --------------------
 function renderTextBody(body) {
   const meta = (body.state && body.state.meta) || {};
   const lines = [];
@@ -235,7 +179,36 @@ function renderTextBody(body) {
   if (body.award != null) lines.push('Total award (ceiling): ' + money(body.award));
   const modelTotal = modelArray(body).reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0);
   if (modelArray(body).length) lines.push('Modified project budget: ' + money(modelTotal));
+  lines.push('');
+  lines.push('A fully-styled copy of the Budget Modification Request is attached to this email as an HTML file — open it in any browser to see the complete form: baseline vs. modified figures per object code, per-year proposed/actuals/balance/projections, and every justification exactly as staff submitted it.');
   return lines.join('\n');
+}
+
+// -------------------- email body (message the reader opens first) --------------------
+function renderEmailBodyHtml(body) {
+  const meta = (body.state && body.state.meta) || {};
+  const districtLabel = esc(body.name || meta.district || body.district || '');
+  const submittedBy = esc(meta.submittedBy || '');
+  const submittedEmail = esc(meta.email || '');
+  const submittedDate = esc(meta.date || new Date().toISOString().slice(0, 10));
+  const total = modelArray(body).reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0);
+  const ceiling = body.award != null ? money(body.award) : '—';
+
+  return `<!doctype html><html><body style="margin:0;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Arial,sans-serif;color:#0F172A">
+  <div style="max-width:640px;margin:0 auto;padding:24px 20px">
+    <div style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E5E7EB">
+      <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Budget Modification Request</p>
+      <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.01em">${districtLabel}</h1>
+      <p style="margin:0 0 20px;color:#6B7280;font-size:14px">Submitted ${submittedDate}${submittedBy ? ' by ' + submittedBy : ''}${submittedEmail ? ' · ' + submittedEmail : ''}</p>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:8px 0;color:#6B7280">Total award (ceiling)</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">${esc(ceiling)}</td></tr>
+        <tr><td style="padding:8px 0;color:#6B7280;border-top:1px solid #F1F5F9">Modified project budget</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-top:1px solid #F1F5F9">${esc(money(total))}</td></tr>
+      </table>
+      <p style="margin:24px 0 0;color:#334155;font-size:14px;line-height:1.6">The complete, fully-styled Budget Modification Request is attached as an <strong>HTML file</strong>. Open the attachment in any browser to see every object code, per-year proposed/actuals/fund balance/projections, and every justification exactly as staff submitted them — same layout as the dashboard's Budget Modification form.</p>
+    </div>
+    <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">bmr-sync · Bulle Consulting · CCCCO EEO IBP Grant</p>
+  </div>
+</body></html>`;
 }
 
 // -------------------- the full form (attached HTML file) --------------------
@@ -444,4 +417,50 @@ function renderFormHtml(body) {
   <span>1/1</span>
 </div>
 </body></html>`;
+}
+
+
+// ---------- draft-started notice (admin only; never CCCCO) ----------
+// Fires on the first PUT of a drafting session: no firstDraftAt recorded, or the
+// recorded one has aged out, or there has been no activity inside the window.
+const DRAFT_WINDOW_MS = 24 * 60 * 60 * 1000;
+function draftNotifyDue(prev, nowMs) {
+  if (!prev) return true;
+  const first = Date.parse(prev.firstDraftAt || '');
+  if (!isFinite(first)) return true;
+  if (nowMs - first > DRAFT_WINDOW_MS) return true;
+  const upd = Date.parse(prev.updatedAt || '');
+  if (!isFinite(upd)) return true;
+  if (nowMs - upd > DRAFT_WINDOW_MS) return true;
+  return false;
+}
+function draftEsc(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function draftBodyLines(label, districtSlug, body, whenIso) {
+  const state = (body && body.state) || {};
+  const meta = state.meta || {};
+  const name = (body && body.name) || districtSlug;
+  const lines = [
+    label + ' draft activity started.',
+    'District: ' + name + ' (' + districtSlug + ')',
+    'First activity: ' + whenIso
+  ];
+  const by = meta.submittedBy || state.submittedBy || state.leadName || '';
+  const em = meta.email || state.email || state.leadEmail || '';
+  if (by) lines.push('Submitted by: ' + by);
+  if (em) lines.push('Contact: ' + em);
+  lines.push('');
+  lines.push('Draft activity only - nothing has been submitted yet.');
+  return { lines, name };
+}
+async function notifyDraftStarted(env, kind, districtSlug, body, whenIso) {
+  const label = kind === 'bmr' ? 'BMR' : 'Report';
+  const d = draftBodyLines(label, districtSlug, body, whenIso);
+  return sendMail(env, {
+    to: ['admin@bulleconsulting.com'],
+    subject: '[' + label + ' draft started] ' + d.name,
+    text: d.lines.join('\n'),
+    html: '<p style="font:14px/1.6 Arial,sans-serif;color:#222">' + d.lines.map(draftEsc).join('<br>') + '</p>'
+  });
 }
