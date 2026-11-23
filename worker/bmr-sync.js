@@ -70,18 +70,20 @@ export default {
       const body = await safeJson(request);
       if (!body) return cors(new Response('invalid json', { status: 400 }));
 
-      await env.BMR_STATE.put(district, JSON.stringify({ ...body, submittedAt: body.submittedAt || new Date().toISOString() }));
+      // Stored first so nothing is lost; counts as submitted only once the email is sent.
+      const record = { ...body, submittedAt: body.submittedAt || new Date().toISOString(), mailed: false };
+      await env.BMR_STATE.put(district, JSON.stringify(record));
 
       const recipients = BMR_TO.slice();
       const districtLabel = body.name || district;
       const meta = (body.state && body.state.meta) || {};
       const dateStr = (meta.date || new Date().toISOString().slice(0, 10)).replace(/[^a-z0-9]/gi, '-');
-      const subject = `Budget Modification Request — ${districtLabel}${meta.date ? ' (' + meta.date + ')' : ''}`;
+      const subject = `Budget Modification Request Form — ${districtLabel}${meta.date ? ' (' + meta.date + ')' : ''}`;
       const formHtml = renderFormHtml(body);
       const pdfBytes = await renderPdfFromHtml(env, formHtml);
       const attach = pdfBytes
-        ? { filename: safeFilename(`BMR-${districtLabel}-${dateStr}.pdf`), content: bytesToB64(pdfBytes), content_type: 'application/pdf' }
-        : { filename: safeFilename(`BMR-${districtLabel}-${dateStr}.html`), content: b64(formHtml), content_type: 'text/html' };
+        ? { filename: safeFilename(`Budget-Modification-Request-Form-${districtLabel}-${dateStr}.pdf`), content: bytesToB64(pdfBytes), content_type: 'application/pdf' }
+        : { filename: safeFilename(`Budget-Modification-Request-Form-${districtLabel}-${dateStr}.html`), content: b64(formHtml), content_type: 'text/html' };
 
       const mail = await sendMail(env, {
         to: recipients,
@@ -90,7 +92,11 @@ export default {
         html: renderEmailBodyHtml(body),
         attachments: [attach],
       });
-      if (!mail.ok) return cors(json({ ok: true, district, mailed: false, mailError: mail.error }));
+      // A failed email must never look like a submission. Plain text with an error
+      // status: every dashboard (including ones that only check that the reply is
+      // JSON, or only the HTTP status) then shows the failure instead of "Submitted".
+      if (!mail.ok) return cors(new Response('Email delivery failed: ' + String(mail.error || 'unknown').slice(0, 200), { status: 502, headers: { 'content-type': 'text/plain' } }));
+      await env.BMR_STATE.put(district, JSON.stringify({ ...record, mailed: true }));
 
       // Confirmation receipt: a copy for the person who submitted, from admin@.
       const submitter = receiptAddress(meta.email);
@@ -130,7 +136,7 @@ function withCors(res, origin) {
 // the rule the BMR Updates tab used; drafts and test records are not.
 function publicStatus(stored) {
   const meta = (stored && stored.state && stored.state.meta) || {};
-  const submitted = !!(stored && (stored.submitted || stored.submittedAt) &&
+  const submitted = !!(stored && (stored.submitted || stored.submittedAt) && stored.mailed !== false &&
     String(meta.submittedBy || '').trim() && stored.baseline && stored.model);
   return { submitted, submittedAt: submitted && stored.submittedAt ? String(stored.submittedAt) : null };
 }
@@ -226,7 +232,7 @@ const YEAR_META_DEFAULT = { y1: { label: 'Year 1', dates: '' }, y2: { label: 'Ye
 function renderTextBody(body) {
   const meta = (body.state && body.state.meta) || {};
   const lines = [];
-  lines.push('BUDGET MODIFICATION REQUEST');
+  lines.push('BUDGET MODIFICATION REQUEST FORM');
   lines.push(meta.district || body.name || body.district || '');
   lines.push('');
   if (meta.submittedBy) lines.push('Submitted by: ' + meta.submittedBy);
@@ -238,7 +244,7 @@ function renderTextBody(body) {
   const modelTotal = modelArray(body).reduce((s, r) => s + (Number(r.y1) || 0) + (Number(r.y2) || 0), 0);
   if (modelArray(body).length) lines.push('Modified project budget: ' + money(modelTotal));
   lines.push('');
-  lines.push('A fully-styled copy of the Budget Modification Request is attached to this email as an HTML file — open it in any browser to see the complete form: baseline vs. modified figures per object code, per-year proposed/actuals/balance/projections, and every justification exactly as staff submitted it.');
+  lines.push('The completed Budget Modification Request Form is attached. Open it to see the complete form: baseline vs. modified figures per object code, per-year proposed/actuals/balance/projections, and every justification exactly as staff submitted it.');
   return lines.join('\n');
 }
 
@@ -255,16 +261,16 @@ function renderEmailBodyHtml(body) {
   return `<!doctype html><html><body style="margin:0;background:#F5F5F7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Arial,sans-serif;color:#0F172A">
   <div style="max-width:640px;margin:0 auto;padding:24px 20px">
     <div style="background:#FFFFFF;border-radius:16px;padding:28px;border:1px solid #E5E7EB">
-      <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Budget Modification Request</p>
+      <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Budget Modification Request Form</p>
       <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.01em">${districtLabel}</h1>
       <p style="margin:0 0 20px;color:#6B7280;font-size:14px">Submitted ${submittedDate}${submittedBy ? ' by ' + submittedBy : ''}${submittedEmail ? ' · ' + submittedEmail : ''}</p>
       <table style="width:100%;border-collapse:collapse">
         <tr><td style="padding:8px 0;color:#6B7280">Total award (ceiling)</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">${esc(ceiling)}</td></tr>
         <tr><td style="padding:8px 0;color:#6B7280;border-top:1px solid #F1F5F9">Modified project budget</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-top:1px solid #F1F5F9">${esc(money(total))}</td></tr>
       </table>
-      <p style="margin:24px 0 0;color:#334155;font-size:14px;line-height:1.6">The complete, fully-styled Budget Modification Request is attached as an <strong>HTML file</strong>. Open the attachment in any browser to see every object code, per-year proposed/actuals/fund balance/projections, and every justification exactly as staff submitted them — same layout as the dashboard's Budget Modification form.</p>
+      <p style="margin:24px 0 0;color:#334155;font-size:14px;line-height:1.6">The completed Budget Modification Request Form is attached. Open the attachment to see every object code, per-year proposed/actuals/fund balance/projections, and every justification exactly as staff submitted them, in the same layout as the Budget Modification Request Form on the district's dashboard.</p>
     </div>
-    <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">bmr-sync · Bulle Consulting · CCCCO EEO IBP Grant</p>
+    <p style="text-align:center;color:#94A3B8;font-size:12px;margin:16px 0 0">Bulle Consulting · CCCCO EEO IBP Grant Initiative</p>
   </div>
 </body></html>`;
 }
@@ -292,7 +298,7 @@ function renderReceiptText(body) {
   return [
     'Dear ' + (f.who || 'colleague') + ',',
     '',
-    'Thank you. This confirms that the Budget Modification Request for ' + f.district + ' was submitted on ' + f.date + ' and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).',
+    'Thank you. This confirms that the Budget Modification Request Form for ' + f.district + ' was submitted on ' + f.date + ' and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).',
     '',
     'Total award (ceiling): ' + f.ceiling,
     'Modified project budget: ' + f.total,
@@ -311,7 +317,7 @@ function renderReceiptHtml(body) {
       <p style="margin:0 0 4px;color:#6B7280;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Submission receipt</p>
       <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;letter-spacing:-.01em;color:#0F172A">${esc(f.district)}</h1>
       <p style="margin:0 0 12px">Dear ${esc(f.who || 'colleague')},</p>
-      <p style="margin:0 0 12px">Thank you. This confirms that the Budget Modification Request for ${esc(f.district)} was submitted on ${esc(f.date)} and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).</p>
+      <p style="margin:0 0 12px">Thank you. This confirms that the Budget Modification Request Form for ${esc(f.district)} was submitted on ${esc(f.date)} and sent to the CCCCO EEO IBP Grant Initiative (eeosubmissions@cccco.edu and JLocust@cccco.edu) and Bulle Consulting (admin@bulleconsulting.com).</p>
       <table style="width:100%;border-collapse:collapse;margin:0 0 12px">
         <tr><td style="padding:8px 0;color:#6B7280">Total award (ceiling)</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;color:#0F172A">${esc(f.ceiling)}</td></tr>
         <tr><td style="padding:8px 0;color:#6B7280;border-top:1px solid #F1F5F9">Modified project budget</td><td style="padding:8px 0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-top:1px solid #F1F5F9;color:#0F172A">${esc(f.total)}</td></tr>
@@ -423,7 +429,7 @@ function renderFormHtml(body) {
   return `<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8" />
-<title>Budget Modification Request &mdash; ${districtLabel}</title>
+<title>Budget Modification Request Form &mdash; ${districtLabel}</title>
 <style>
   :root {
     --brand:#0B2E4F; --brand-2:#0E5FBA; --accent:#DAA520; --ink:#0F172A;
@@ -485,7 +491,7 @@ function renderFormHtml(body) {
 </head><body>
 <div class="page-header">
   <span class="date">${esc(pageDateStr)}</span>
-  <span class="title">Forms &middot; Spend-Down Monitor</span>
+  <span class="title">Budget Modification Request Form</span>
 </div>
 <div class="page">
   ${yearSections}
@@ -522,7 +528,7 @@ function renderFormHtml(body) {
 </div>
 <div class="page-footer">
   <span>${esc(pageDateStr)}</span>
-  <span>Forms &middot; Spend-Down Monitor</span>
+  <span>Budget Modification Request Form</span>
 </div>
 <div class="page-footer">
   <span>https://eeo.bulleconsulting.com/dashboard</span>
@@ -567,7 +573,7 @@ function draftBodyLines(label, districtSlug, body, whenIso) {
   return { lines, name };
 }
 async function notifyDraftStarted(env, kind, districtSlug, body, whenIso) {
-  const label = kind === 'bmr' ? 'BMR' : 'Report';
+  const label = kind === 'bmr' ? 'Budget Modification Request Form' : 'EEO IBP Grant Report';
   const d = draftBodyLines(label, districtSlug, body, whenIso);
   return sendMail(env, {
     to: ['admin@bulleconsulting.com'],

@@ -1,13 +1,14 @@
 # bmr-sync Worker
 
-Shared store for District **Budget Modification Request (BMR)** data, and the
-submission relay that emails a completed BMR to the CCCCO EEO inbox.
+Shared store for the districts' **Budget Modification Request Form** data, and
+the submission relay that emails a completed Budget Modification Request Form
+to CCCCO.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| `PUT`  | `/bmr/{district}` | A district dashboard publishes its live BMR data (auto-sync). |
+| `PUT`  | `/bmr/{district}` | A district dashboard publishes its live Budget Modification Request Form data (auto-sync). |
 | `POST` | `/bmr/{district}/submit` | District **submits**: stores the record **and emails a full copy**. |
 | `GET`  | `/bmr/{district}` | Public status for the "BMR Updates" tab: `{ submitted, submittedAt }` only. |
 | `GET`  | `/health` | Liveness check. |
@@ -42,19 +43,25 @@ dashboard with a unique `BMR_SYNC_ID` and the shared `BMR_SYNC_URL`.
   `JLocust@cccco.edu` (Dr. Jonathan Locust, CCCCO, added 2026-11-23 at CCCCO's
   request), whatever list the dashboard sends (`BMR_TO` in `bmr-sync.js`);
 - the person who submitted gets a copy as a confirmation receipt
-  ("Receipt: Budget Modification Request — …"), with the same attachment, sent
+  ("Receipt: Budget Modification Request Form — …"), with the same attachment, sent
   to the email typed in the form. No receipt when that field is empty, holds
   more than one address, or is one of the two addresses above;
 - every email the service sends is from `Bulle Consulting <admin@bulleconsulting.com>`
   (`MAIL_FROM`), so replies reach a real inbox.
 
+If the email fails, the service answers with an error (HTTP 502, plain text)
+so every dashboard shows the failure instead of "Submitted", and the stored
+record is marked `mailed: false` so it doesn't count as submitted on the BMR
+Updates tab. (Allan Hancock's first submission, around 2026-06-29, showed
+"Submitted" but was never delivered.)
+
 Every submission email has a short summary in the message (district,
 submitter, award ceiling, modified budget) and the **full form attached as a
-PDF** (`BMR-<district>-<date>.pdf`), or as an HTML file when the PDF can't be
+PDF** (`Budget-Modification-Request-Form-<district>-<date>.pdf`), or as an HTML file when the PDF can't be
 rendered, so nothing is ever clipped.
 
 The first save of a drafting session (no activity for 24 hours) also emails a
-short "[BMR draft started]" notice to `admin@bulleconsulting.com` only, never
+short "[Budget Modification Request Form draft started]" notice to `admin@bulleconsulting.com` only, never
 to CCCCO.
 
 ## Email sender
